@@ -1,0 +1,43 @@
+# --- macOS ---
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# --- Éditeurs ---
+.vscode/
+.idea/
+*.swp
+
+# --- Secrets : jamais versionnés (seul .env.example l'est) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+secrets/
+credentials*.json
+.npmrc
+
+# --- Dépendances, builds, journaux ---
+node_modules/
+dist/
+build/
+.next/
+coverage/
+*.log
+__pycache__/
+*.pyc
+.venv/
+
+# --- Préparation : non publiée pour l'instant (à revoir plus tard) ---
+preparation/
+
+# --- Données de capture Screenpipe : captures d'écran, audio, bases ---
+# Elles contiennent ce qui s'est affiché et dit à l'écran : jamais versionnées.
+sessions/
+.screenpipe/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
