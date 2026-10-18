@@ -7,7 +7,7 @@ Le wrapper est entièrement implémenté (étapes 1 à 5) mais ne peut pas être
 1. **Session réelle terminée** : une session créée avec `new`, lancée avec `start`, marquée avec `ready`, et arrêtée avec `stop`
 2. **Configuration .env** :
    - `ANTHROPIC_API_KEY` : clé API Claude
-   - `ANTHROPIC_MODEL` : identifiant du modèle (ex: `claude-sonnet-4-5-20250929`)
+   - `ANTHROPIC_MODEL` : identifiant du modèle (ex: `claude-sonnet-5-5`)
    - `SCREENPIPE_API_KEY` : clé Screenpipe
 
 ## Test avec fixtures
@@ -139,3 +139,12 @@ Basé sur les fixtures :
 - Fermer Slack avant la session
 - Désactiver les notifications
 - Préparer le deck à l'avance (éviter VS Code pendant la session)
+
+## Limite du test sur fixtures
+
+Le test sur fixtures valide la chaîne (timeline, appel au modèle, validation des
+preuves, dashboard). Il ne valide **pas** la détection d'incohérences de nom :
+les données de test contiennent volontairement « Take » et le manifeste de test
+ne nomme pas le projet. La détection ne se juge que sur une session réelle, avec
+un prompt qui ne cite aucun nom de projet. Le prompt ne doit jamais contenir
+« Take » ni « Pitch-Me ».
