@@ -96,3 +96,29 @@ au premier plan.
   existantes.
 - Livraison par lots A à D ; seul le lot A est indispensable.
 **Statut :** Proposée — en attente de validation par un humain de l'équipe.
+
+## 2026-10-18 — Coque Electron flottante et guide live (proposée)
+
+**Contexte :** la décision « Panneau de contrôle web en fenêtre popup » retenait
+une fenêtre de navigateur, qui ne reste pas au premier plan sous Firefox. Jongler
+entre deux navigateurs, ou ouvrir un onglet, n'est pas praticable en
+présentation. Guilhem veut aussi que le panneau serve de guide discret pendant le
+live : temps restant, points non abordés, rappels pour les dernières secondes.
+**Proposition :** garder la page web et les routes de la décision précédente, mais
+l'afficher dans une coque Electron mince (fenêtre flottante, toujours au premier
+plan, sans voler le focus, exclue des captures si macOS le permet). Ajouter au
+manifeste un champ optionnel `guide` (points, instants visés, rappels de fin) et
+un module pur `guide.js` qui calcule l'état du guide. Détail dans
+`SPEC_controle.md` v0.2.
+**Alternatives écartées :** Tauri (chaîne Rust à installer), application macOS
+native, Document Picture-in-Picture (Chromium seulement), détection automatique
+des points abordés par la transcription (reportée après le hackathon).
+**Conséquences :**
+- La décision précédente est amendée sur la forme du panneau (« fenêtre popup » →
+  « coque Electron »), pas sur l'API ni la sécurité.
+- `electron` devient une `devDependency` ; usage local, rien n'est distribué.
+- Le schéma gagne `guide` (optionnel) et le type de repère `point` ; la timeline
+  gagne `plan_realise`.
+- L'exclusion des captures par `setContentProtection` est à vérifier ; le
+  marqueur de titre reste le filet de sécurité.
+**Statut :** Proposée — en attente de validation par un humain de l'équipe.

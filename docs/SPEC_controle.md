@@ -1,8 +1,9 @@
 # SPEC — Panneau de contrôle et fiche de préparation
 
-**Version :** 0.1 — **Date :** 2026-10-18
+**Version :** 0.2 — **Date :** 2026-10-18
 **Statut :** proposée. L'implémentation attend la validation de l'entrée
-« Panneau de contrôle web en fenêtre popup » dans `DECISIONS.md`.
+« Panneau de contrôle web en fenêtre popup », puis de l'entrée « Coque
+Electron flottante et guide live » (qui l'amende), dans `DECISIONS.md`.
 **Complète :** `SPEC_wrapper.md` (v0.2). Ce document ajoute une façade au CLI et
 un champ optionnel `contexte` au manifeste ; il ne modifie pas le reste.
 
@@ -30,19 +31,37 @@ durée…).
 - Le code dérive les rappels de la fiche ; le LLM n'intervient pas avant le
   rapport.
 
-## 3. Forme retenue : fenêtre popup web
+## 3. Forme retenue : page web dans une coque flottante
 
-Page `web/controle.html`, servie par `serve`, ouverte dans une fenêtre séparée
-(`window.open(url, 'pitchme-controle', 'popup,width=380,height=560')`) depuis le
-dashboard, ou directement par son URL. Aucune dépendance nouvelle.
+Le panneau est une **page web** (`web/controle.html`, servie par `serve`) affichée
+dans une **petite fenêtre Electron flottante** : une coque mince de quelques
+dizaines de lignes (`electron/main.js`), sans logique métier. La page reste
+utilisable dans un onglet de navigateur (développement, secours), mais l'usage
+normal est la fenêtre flottante.
 
-Limite connue : sous Firefox, la fenêtre ne peut pas rester au premier plan
-(l'API Document Picture-in-Picture n'existe que sous Chromium). Contournements :
-la placer sur un second écran ou dans un coin, et utiliser le mode compact du
-live (§9).
+Pourquoi : jongler entre deux navigateurs ou perdre la présentation dans un
+onglet n'est pas praticable. La coque donne une vraie fenêtre déplaçable, sans
+refaire le panneau.
 
-Écartés : Electron/Tauri (build et dépendances, trop lourd pour 48 h),
-application macOS native, extension de navigateur. Piste ultérieure : lot D.
+Exigences de la coque :
+
+- fenêtre d'environ 360 × 520 px, déplaçable (zone de titre), redimensionnable,
+  légèrement transparente (opacité réglable, 0,9 par défaut) ;
+- toujours au premier plan, y compris au-dessus d'une application en plein écran
+  (`setAlwaysOnTop(true, 'screen-saver')`, `setVisibleOnAllWorkspaces` avec
+  `visibleOnFullScreen`) ;
+- **ne vole pas le focus** à la présentation : type `panel`, activation seulement
+  au clic dans un champ de saisie. Un clic sur un bouton ne doit pas empêcher de
+  changer de diapositive au clavier ;
+- titre de fenêtre commençant par le marqueur du §4 ;
+- lancement par `node src/cli.js panneau` (démarre le serveur s'il ne tourne pas,
+  puis ouvre la fenêtre ; le jeton du §5 est transmis à la coque, pas affiché) ;
+- `electron` en `devDependency` ; aucune autre dépendance.
+
+Limites : installation d'Electron (téléchargement d'environ 100 Mo) ; si elle
+échoue, repli sur la page dans un onglet. Écartés : Tauri (chaîne Rust à
+installer), application macOS native, extension de navigateur, Document
+Picture-in-Picture (Chromium seulement).
 
 ## 4. Piège : le panneau est lui-même capturé
 
@@ -56,9 +75,12 @@ comptée « hors cadre » et son texte (checklist, objectif) entrerait dans
   contient le marqueur : ni fenêtre, ni hors cadre, ni extrait de texte, ni
   changement de fenêtre. Le temps où le panneau a le focus est attribué à la
   fenêtre précédente.
-- Recommandation affichée dans la checklist : ouvrir le panneau dans une autre
-  application que celle de la présentation. Le marqueur reste le filet de
-  sécurité.
+- La coque active `setContentProtection(true)` : sous macOS, la fenêtre est
+  exclue des captures d'écran et du partage d'écran, donc invisible pour les
+  participants de la visio. **Efficacité à vérifier** sur la version de macOS et
+  avec la capture de Screenpipe (des versions récentes de macOS contournent cette
+  protection pour certaines API de capture). Le marqueur reste le filet de
+  sécurité dans tous les cas.
 - Test unitaire avec une fixture contenant une frame du panneau.
 
 ## 5. Sécurité (obligatoire)
@@ -159,6 +181,20 @@ dans `ManifestSchema`, donc les sessions existantes restent valides) :
   déjà cochés ni les rappels ajoutés à la main.
 - L'objectif et les critères restent saisis par l'humain (champs de la fiche).
 
+**Guide live.** Le manifeste reçoit un second champ optionnel `guide` (même
+compatibilité que `contexte`) :
+
+| Clé | Contenu |
+|---|---|
+| `points` | liste de `{ id, titre, t_cible_s, important }` : les points à aborder et l'instant visé (en secondes depuis « prêt ») |
+| `rappels_fin` | liste de textes à dire dans les dernières secondes (appel à l'action, adresse du dépôt…) |
+| `alerte_fin_s` | durée de la fenêtre finale, 10 par défaut |
+
+La fiche demande donc aussi : « Quels sont les points à aborder, dans quel ordre,
+et à quel moment environ ? » et « Qu'est-ce qui doit être dit dans les
+10 dernières secondes ? ». Ces champs sont facultatifs : sans `guide`, le panneau
+n'affiche que le chrono.
+
 **Noms d'application.** `fenetres_prevues[].app` doit être égal au nom que
 Screenpipe rapporte. Une table `APP_NAMES` (navigateur → nom attendu) vit dans
 `fiche.js` ; son contenu est à vérifier lors du premier test réel et à consigner
@@ -183,6 +219,29 @@ framework : HTML, CSS et JS natifs, comme le dashboard.
 | `live`, après « prêt » | **mode compact** : chrono et durée cible, boutons Blocage, OK, Note (champ court), Terminer |
 | `termine` | bouton « Générer le rapport », progression, lien vers le dashboard |
 
+**Guide discret pendant le live.** Tout est calculé par une fonction pure
+`etatGuide(manifeste, repereDepuis, maintenant)` dans `src/guide.js` (importée par
+la page, testable sans navigateur), sans LLM :
+
+- temps écoulé et **temps restant** par rapport à `duree_cible_s`, avec une barre
+  de progression fine ;
+- le **point attendu** à cet instant (le premier non fait dont `t_cible_s` est
+  atteint), et les **points en retard** (`t_cible_s` dépassé, non faits), signalés
+  par une couleur sobre, sans clignotement ni son ;
+- les **points importants non évoqués** restent listés tant qu'ils ne sont pas
+  faits, même après leur instant cible ;
+- à `alerte_fin_s` secondes de la fin, le panneau affiche en grand les
+  `rappels_fin` ; après la durée cible, le chrono continue en négatif ;
+- marquer un point comme fait : clic sur le point ou touche Entrée quand le
+  panneau a le focus. Cela pose un repère de type `point` (texte = identifiant du
+  point) ; `RepereSchema` gagne ce type et `timeline.json` ajoute
+  `plan_realise: [{ id, titre, t_cible_s, t_reel_s | null }]`, calculé par le code,
+  que le rapport peut commenter (écart au plan par point).
+
+Le mode compact reste lisible d'un coup d'œil : chrono et reste en gros, un seul
+point attendu, le reste replié. Détection automatique des points abordés à
+partir de la transcription : hors périmètre du hackathon (lot E).
+
 Les raccourcis clavier ne valent que lorsque le panneau a le focus (aucun
 raccourci global). Une erreur s'affiche dans un bandeau avec le message du
 serveur ; le panneau relit `/etat` toutes les 2 s.
@@ -191,14 +250,18 @@ serveur ; le panneau relit `/etat` toutes les 2 s.
 
 Dernier jour du hackathon : on livre par lots utilisables séparément.
 
-- **A — indispensable :** service partagé, API et sécurité, panneau sans fiche
-  (les rappels sont la checklist déjà présente dans le manifeste), filtre du
-  marqueur dans `timeline.js`, tests.
-- **B :** fiche en cartes, `contexte`, dérivation, `next` mis à jour.
-- **C :** rapport lancé depuis le panneau avec progression, bouton d'ouverture
-  du panneau dans le dashboard.
-- **D (après le hackathon) :** Document Picture-in-Picture sous Chromium ou
-  application Electron/Tauri toujours au premier plan.
+- **A — indispensable :** service partagé, API et sécurité, filtre du marqueur
+  dans `timeline.js`, tests.
+- **B — fenêtre :** page du panneau (préparation, rappels cochables, démarrer,
+  prêt, repères, terminer) et coque Electron flottante, sans fiche (les rappels
+  sont la checklist déjà présente dans le manifeste).
+- **C — fiche :** `contexte` et `guide` dans le schéma, cartes de la fiche,
+  dérivation, `next` mis à jour.
+- **D — guide live :** `guide.js`, affichage du chrono et des points, repère
+  `point`, `plan_realise` dans la timeline, prompt du rapport.
+- **E (après le hackathon) :** rapport lancé depuis le panneau, détection
+  automatique des points abordés par la transcription, réglage de l'opacité et
+  raccourcis globaux.
 
 ## 11. Tests
 
@@ -208,6 +271,9 @@ Dernier jour du hackathon : on livre par lots utilisables séparément.
   étranger, 415 sans `application/json`, 409 sur état invalide, 404, cas nominal
   de chaque route.
 - `fiche.js` : dérivation et fusion.
+- `guide.js` : point attendu, points en retard, fenêtre finale, dépassement de la
+  durée cible, session sans `guide`.
+- `timeline.js` : `plan_realise` calculé à partir des repères `point`.
 - `timeline.js` : frames du panneau ignorées.
 - Aucun test ne lance un vrai Screenpipe ni n'appelle le LLM.
 
@@ -220,4 +286,5 @@ validation de la décision est absente de `DECISIONS.md`. Ne jamais lire
 ## 13. Hors périmètre
 
 Modification du manifeste après le démarrage, accès à distance, plusieurs
-utilisateurs, authentification autre que le jeton, raccourcis clavier globaux.
+utilisateurs, authentification autre que le jeton, raccourcis clavier globaux,
+signature ou distribution de la coque Electron (usage local uniquement).
