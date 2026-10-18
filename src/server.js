@@ -105,7 +105,7 @@ export function demarrerServeur(port, webDir, sessionsDir) {
       }
 
       // Routes API
-      if (path === '/api/sessions') {
+      if (path === '/api/sessions' && req.method === 'GET') {
         // Lister les sessions
         const sessions = await readdir(sessionsDir);
         const liste = [];

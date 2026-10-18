@@ -138,3 +138,22 @@ test('POST /api/session/:id/dupliquer refuse sans jeton', async () => {
   });
   assert.equal(rep.status, 401);
 });
+
+test('POST /api/sessions crée une session (et ne renvoie pas la liste)', async () => {
+  const rep = await fetch(`http://127.0.0.1:${port}/api/sessions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jeton}` },
+    body: JSON.stringify({ titre: 'Nouvelle via API' })
+  });
+  assert.equal(rep.status, 200);
+  const manifest = await rep.json();
+  assert.ok(!Array.isArray(manifest));
+  assert.equal(manifest.titre, 'Nouvelle via API');
+  assert.equal(manifest.statut, 'preparation');
+  assert.match(manifest.id, /^\d{4}-\d{2}-\d{2}-s\d{2}$/);
+});
+
+test('GET /api/sessions liste toujours les sessions', async () => {
+  const rep = await fetch(`http://127.0.0.1:${port}/api/sessions`);
+  assert.ok(Array.isArray(await rep.json()));
+});
