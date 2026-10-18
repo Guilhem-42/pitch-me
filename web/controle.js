@@ -189,6 +189,29 @@ function renderPrep() {
     checklist.innerHTML = '<p style="color: #999;">Aucun rappel</p>';
   }
 
+  // Guide
+  if (state.manifest.guide) {
+    // Charger les points
+    const pointsTexte = state.manifest.guide.points.map(p => {
+      const mm = Math.floor(p.t_cible_s / 60);
+      const ss = p.t_cible_s % 60;
+      const prefix = p.important ? '!' : '';
+      return `${prefix}${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')} ${p.titre}`;
+    }).join('\n');
+    document.getElementById('guide-points').value = pointsTexte;
+
+    // Charger les rappels
+    document.getElementById('guide-rappels').value = state.manifest.guide.rappels_fin.join('\n');
+
+    // Charger l'alerte
+    document.getElementById('guide-alerte').value = state.manifest.guide.alerte_fin_s || 10;
+  } else {
+    // Vider les champs
+    document.getElementById('guide-points').value = '';
+    document.getElementById('guide-rappels').value = '';
+    document.getElementById('guide-alerte').value = 10;
+  }
+
   // Blockers
   const blockers = document.getElementById('prep-blockers');
   blockers.innerHTML = '';
@@ -418,6 +441,68 @@ function attachEvents() {
     state.sessionId = null;
     state.manifest = null;
     showView('view-select');
+  });
+
+  // Guide
+  document.getElementById('btn-save-guide').addEventListener('click', async () => {
+    try {
+      const pointsTexte = document.getElementById('guide-points').value.trim();
+      const rappelsTexte = document.getElementById('guide-rappels').value.trim();
+      const alerteFin = parseInt(document.getElementById('guide-alerte').value, 10);
+
+      // Parser les points
+      const points = [];
+      if (pointsTexte) {
+        const lignes = pointsTexte.split('\n').filter(l => l.trim());
+        for (const ligne of lignes) {
+          const match = ligne.match(/^(!?)(\d{1,2}):(\d{2})\s+(.+)$/);
+          if (!match) {
+            showError(`Format invalide : "${ligne}". Attendu : mm:ss titre`);
+            return;
+          }
+
+          const important = match[1] === '!';
+          const mm = parseInt(match[2], 10);
+          const ss = parseInt(match[3], 10);
+          const titre = match[4].trim();
+
+          // Générer un id simple (slug du titre)
+          const id = titre.toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Retirer accents
+            .replace(/[^a-z0-9]+/g, '-') // Remplacer espaces et caractères spéciaux
+            .replace(/^-+|-+$/g, ''); // Retirer tirets début/fin
+
+          points.push({
+            id,
+            titre,
+            t_cible_s: mm * 60 + ss,
+            important
+          });
+        }
+      }
+
+      // Parser les rappels
+      const rappels_fin = rappelsTexte
+        ? rappelsTexte.split('\n').filter(l => l.trim()).map(l => l.trim())
+        : [];
+
+      // Construire le guide
+      const guide = points.length > 0 ? {
+        points,
+        rappels_fin,
+        alerte_fin_s: alerteFin
+      } : null;
+
+      // Enregistrer
+      await api('PATCH', '/api/guide', { id: state.sessionId, guide });
+      const data = await api('GET', `/api/session/${state.sessionId}`);
+      state.manifest = data.manifest;
+      renderCurrentView();
+
+      hideError();
+    } catch (err) {
+      showError(err.message);
+    }
   });
 
   // Live avant prêt

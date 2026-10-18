@@ -271,6 +271,23 @@
         <div id="prep-checklist"></div>
       </div>
 
+      <div class="card" id="prep-guide">
+        <h2>Guide live (optionnel)</h2>
+        <div class="field">
+          <label>Points (un par ligne : mm:ss titre, préfixe ! pour important)</label>
+          <textarea id="guide-points" rows="5" placeholder="00:30 Introduction&#10;02:00 Démo&#10;!04:00 Conclusion" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; font-family: monospace;"></textarea>
+        </div>
+        <div class="field">
+          <label>Rappels de fin (un par ligne)</label>
+          <textarea id="guide-rappels" rows="3" placeholder="Merci !&#10;Questions ?" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></textarea>
+        </div>
+        <div class="field">
+          <label>Alerte fin (secondes avant la fin)</label>
+          <input type="number" id="guide-alerte" value="10" min="5" max="60" style="width: 80px; padding: 6px; border: 1px solid #ddd; border-radius: 4px;" />
+        </div>
+        <button class="secondary" id="btn-save-guide">Enregistrer le guide</button>
+      </div>
+
       <div id="prep-blockers"></div>
 
       <button id="btn-start-capture">Démarrer la capture</button>
