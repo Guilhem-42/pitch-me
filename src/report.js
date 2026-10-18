@@ -135,10 +135,15 @@ export async function genererRapport(manifest, timeline, sessionsDir, apiKey, mo
       });
 
       // Extraire le JSON de la réponse
-      if (!response.content || !response.content[0] || !response.content[0].text) {
-        throw new Error('Réponse API invalide: pas de contenu texte');
+      // Chercher le premier bloc de type "text" (peut y avoir un bloc "thinking" avant)
+      const textBlock = response.content?.find(block => block.type === 'text');
+      if (!textBlock || !textBlock.text) {
+        if (process.env.DEBUG) {
+          console.error('Réponse API complète:', JSON.stringify(response, null, 2));
+        }
+        throw new Error(`Réponse API invalide: aucun bloc text trouvé`);
       }
-      const content = response.content[0].text;
+      const content = textBlock.text;
       let jsonText = content;
 
       // Essayer d'extraire le JSON si c'est dans un code block
