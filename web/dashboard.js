@@ -400,6 +400,14 @@ async function supprimerSessionCourante() {
 
 document.getElementById('btn-supprimer').addEventListener('click', supprimerSessionCourante);
 
+// Fenêtre ouverte depuis le panneau (?fenetre=1) : bouton et touche Échap pour la refermer
+if (new URLSearchParams(location.search).get('fenetre') === '1') {
+  const fermer = document.getElementById('btn-fermer');
+  fermer.hidden = false;
+  fermer.addEventListener('click', () => window.close());
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') window.close(); });
+}
+
 // Initialisation
 document.getElementById('session-select').addEventListener('change', (e) => {
   chargerSession(e.target.value);

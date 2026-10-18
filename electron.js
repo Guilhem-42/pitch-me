@@ -16,6 +16,12 @@ let win = null;
 let serveur = null;
 let creation = false;
 
+// Opacité des fenêtres (0.5 à 1) ; surchargeable : PITCHME_OPACITE=0.9 npm run panneau
+function opacite(defaut) {
+  const v = Number(process.env.PITCHME_OPACITE);
+  return v >= 0.5 && v <= 1 ? v : defaut;
+}
+
 function demarrerServeurSur(portCible) {
   return new Promise((resolve, reject) => {
     const { server } = demarrerServeur(portCible, join(__dirname, 'web'), CONFIG.SESSIONS_DIR);
@@ -83,6 +89,31 @@ async function creerFenetre() {
 
     win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
     win.setAlwaysOnTop(true, 'floating', 1);
+
+    win.setOpacity(opacite(0.95));
+
+    // Le tableau de bord s'ouvre dans une fenêtre normale (window.open depuis le panneau).
+    // Il n'est pas protégé de la capture : à ouvrir hors session, pas pendant le live.
+    win.webContents.setWindowOpenHandler(({ url }) => {
+      try {
+        const u = new URL(url);
+        if (u.hostname === 'localhost' && Number(u.port) === port && u.pathname === '/index.html') {
+          return {
+            action: 'allow',
+            overrideBrowserWindowOptions: {
+              width: 1100,
+              height: 800,
+              title: 'Pitch-Me — Tableau de bord',
+              alwaysOnTop: false,
+              type: undefined,
+              opacity: opacite(0.97),
+              webPreferences: { nodeIntegration: false, contextIsolation: true }
+            }
+          };
+        }
+      } catch { /* URL invalide : refus */ }
+      return { action: 'deny' };
+    });
 
     win.loadURL(`http://localhost:${port}/controle.html`);
 

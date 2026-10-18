@@ -580,14 +580,36 @@ function attachEvents() {
     }
   });
 
-  // Terminée
+  // Tableau de bord dans une fenêtre dédiée (même nom de fenêtre : un seul exemplaire)
+  function ouvrirTableauDeBord(id) {
+    const q = new URLSearchParams({ fenetre: '1' });
+    if (id) q.set('session', id);
+    window.open(`/index.html?${q}`, 'pitch-me-dashboard', 'width=1100,height=800');
+  }
+  document.getElementById('btn-dashboard-select').addEventListener('click', () => ouvrirTableauDeBord(null));
+  document.getElementById('btn-dashboard-done').addEventListener('click', () => ouvrirTableauDeBord(state.sessionId));
+
+  // Terminée : génération du rapport via l'API (même route que le tableau de bord)
   document.getElementById('btn-report').addEventListener('click', async () => {
+    const bouton = document.getElementById('btn-report');
+    const progression = document.getElementById('report-progress');
     try {
-      document.getElementById('report-progress').classList.remove('hidden');
-      // Note: POST /api/session/:id/report n'existe pas encore, on utilise le CLI pour le lot B
-      showError('Utilisez le CLI pour générer le rapport : node src/cli.js report ' + state.sessionId);
+      bouton.disabled = true;
+      progression.classList.remove('hidden');
+      const { token } = await (await fetch('/api/token')).json();
+      const r = await fetch(`/api/session/${state.sessionId}/rapport`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: '{}'
+      });
+      const corps = await r.json();
+      if (!r.ok) throw new Error(corps.error || 'Échec');
+      ouvrirTableauDeBord(state.sessionId);
     } catch (err) {
       showError(err.message);
+    } finally {
+      bouton.disabled = false;
+      progression.classList.add('hidden');
     }
   });
 
