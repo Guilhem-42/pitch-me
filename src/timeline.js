@@ -1,4 +1,5 @@
 import { TimelineSchema } from './schemas.js';
+import { MARQUEUR_PANNEAU } from './config.js';
 
 /**
  * Convertit un timestamp ISO 8601 en décalage en secondes depuis le début
@@ -266,12 +267,18 @@ function extraireTexte(frames, debut, max = 40) {
  * @returns {Object} Timeline calculée
  */
 export function calculerTimeline(manifest, donnees) {
-  const { frames = [], audio = [] } = donnees;
+  let { frames = [], audio = [] } = donnees;
   const { debut, pret, fin, fenetres_prevues, reperes } = manifest;
 
   if (!debut || !pret || !fin) {
     throw new Error('Le manifeste doit avoir debut, pret et fin renseignés');
   }
+
+  // Filtrer les frames du panneau de contrôle (marqueur dans window_name)
+  frames = frames.filter(frame => {
+    const windowName = frame.content?.window_name || '';
+    return !windowName.includes(MARQUEUR_PANNEAU);
+  });
 
   const debutDate = new Date(debut);
   const pretDate = new Date(pret);

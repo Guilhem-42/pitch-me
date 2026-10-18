@@ -16,6 +16,11 @@ export const CONFIG = {
 };
 
 /**
+ * Marqueur dans le titre du panneau de contrôle pour filtrage
+ */
+export const MARQUEUR_PANNEAU = '[pitch-me-ctrl]';
+
+/**
  * Valide que les clés API sont présentes
  * @param {boolean} needAnthropic - Vérifier la clé Anthropic
  * @param {boolean} needScreenpipe - Vérifier la clé Screenpipe

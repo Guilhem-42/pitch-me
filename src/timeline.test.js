@@ -128,4 +128,38 @@ describe('calculerTimeline', () => {
       assert.ok(extrait.texte.length <= 300);
     }
   });
+
+  test('filtre les frames du panneau de contrôle', async () => {
+    const { MARQUEUR_PANNEAU } = await import('./config.js');
+    const manifest = await chargerFixture('manifest-session1.json');
+    const donnees = await chargerFixture('donnees-session1.json');
+
+    // Ajouter une frame avec le marqueur dans window_name
+    const framesAvecPanneau = [
+      ...donnees.frames,
+      {
+        content: {
+          timestamp: '2026-10-18T14:03:00Z',
+          app_name: 'Google Chrome',
+          window_name: `Contrôle ${MARQUEUR_PANNEAU}`,
+          text: 'Panneau de contrôle'
+        }
+      }
+    ];
+
+    const donneesAvecPanneau = { ...donnees, frames: framesAvecPanneau };
+    const timeline = calculerTimeline(manifest, donneesAvecPanneau);
+
+    // Vérifier qu'aucune fenêtre ne contient le marqueur
+    for (const fenetre of timeline.fenetres) {
+      assert.ok(!fenetre.fenetre.includes(MARQUEUR_PANNEAU),
+        `La fenêtre "${fenetre.fenetre}" ne devrait pas être dans la timeline`);
+    }
+
+    // Vérifier qu'aucun extrait ne contient le marqueur
+    for (const extrait of timeline.extraits_texte) {
+      assert.ok(!extrait.app.includes(MARQUEUR_PANNEAU));
+      assert.ok(!extrait.texte.includes('Panneau de contrôle'));
+    }
+  });
 });
