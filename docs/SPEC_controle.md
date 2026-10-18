@@ -1,6 +1,6 @@
 # SPEC — Panneau de contrôle et fiche de préparation
 
-**Version :** 0.2 — **Date :** 2026-10-18
+**Version :** 0.3 — **Date :** 2026-10-18
 **Statut :** proposée. L'implémentation attend la validation de l'entrée
 « Panneau de contrôle web en fenêtre popup », puis de l'entrée « Coque
 Electron flottante et guide live » (qui l'amende), dans `DECISIONS.md`.
@@ -118,6 +118,7 @@ JSON partout. Erreurs : `{ "erreur": "message", "code": "ETAT_INVALIDE" }`.
 | `POST /api/sessions` | crée une session | corps : `titre` + `fiche` optionnelle ; renvoie le manifeste |
 | `PATCH /api/session/:id/fiche` | modifie objectif, critères, `contexte`, checklist | seulement si `statut = preparation` |
 | `PATCH /api/session/:id/checklist/:itemId` | coche ou décoche un rappel | autorisé en `preparation` et `live` |
+| `POST /api/session/:id/dupliquer` | copie la session en préparation | voir §7 ; renvoie le nouveau manifeste |
 | `POST /api/session/:id/start` | lance la capture | consentement requis ; 409 si une autre session est `live` |
 | `POST /api/session/:id/ready` | pose le repère « prêt » | |
 | `POST /api/session/:id/mark` | repère `blocage`, `ok` ou `note` + texte | |
@@ -130,7 +131,7 @@ avec le détail Zod.
 ## 7. Service partagé
 
 Extraire de `cli.js` un module `src/session-service.js` :
-`creerSession`, `majFiche`, `cocherRappel`, `demarrer`, `pret`, `repere`,
+`creerSession`, `dupliquerSession`, `majFiche`, `cocherRappel`, `demarrer`, `pret`, `repere`,
 `arreter`, `etat`, `lancerRapport`. `cli.js` devient une façade (arguments,
 question `o/N`, affichage) ; `server.js` en est une autre. Plus aucun
 `process.exit` dans le service.
@@ -138,6 +139,18 @@ question `o/N`, affichage) ; `server.js` en est une autre. Plus aucun
 - Erreurs typées `ErreurSession(code, message)` avec les codes `INTROUVABLE`,
   `ETAT_INVALIDE`, `CONSENTEMENT_REQUIS`, `CONFIG_MANQUANTE`, `SESSION_ACTIVE`,
   traduits en statuts HTTP par le serveur.
+- **Duplication** (`dupliquerSession`, commande `dupliquer <id>` du CLI, bouton
+  « Dupliquer cette session » du panneau) : crée une nouvelle session en
+  `preparation`, à partir de n'importe quel statut. Copiés : objectif, critères,
+  durée cible, fenêtres prévues, audio, `guide`, `contexte` (avec `date_prevue`
+  remise à `null`), `session_precedente` (la copie prend la même place dans la
+  chaîne que l'originale) et la checklist avec tous les rappels décochés. Non
+  copiés : repères, horodatages, statut, dossier `screenpipe/`. La session source
+  n'est jamais modifiée et son `data-dir` n'est jamais touché. Titre : celui de
+  l'originale suivi de « (copie) ».
+- Le numéro d'une nouvelle session est le plus grand numéro existant du jour plus
+  un (et non le nombre de dossiers), pour ne jamais réattribuer un identifiant
+  existant, même si des dossiers ont été déplacés.
 - Une seule session `live` à la fois (port unique) : `demarrer` refuse si une
   autre session est `live` avec un PID en vie.
 - Écriture du manifeste atomique (fichier temporaire puis `rename`) : le CLI et
@@ -217,7 +230,7 @@ framework : HTML, CSS et JS natifs, comme le dashboard.
 | `preparation` | objectif, durée, fenêtres prévues ; **rappels cochables** ; indicateurs bloquants (clé API ou modèle manquants) ; bouton « Démarrer la capture » (récapitulatif de consentement) |
 | `live`, avant « prêt » | rappels restants ; indicateur Screenpipe ; bouton « Je suis prêt — lancer le live » |
 | `live`, après « prêt » | **mode compact** : chrono et durée cible, boutons Blocage, OK, Note (champ court), Terminer |
-| `termine` | bouton « Générer le rapport », progression, lien vers le dashboard |
+| `termine` | bouton « Générer le rapport », progression, lien vers le dashboard ; bouton « Dupliquer cette session » |
 
 **Guide discret pendant le live.** Tout est calculé par une fonction pure
 `etatGuide(manifeste, repereDepuis, maintenant)` dans `src/guide.js` (importée par
@@ -255,7 +268,9 @@ Dernier jour du hackathon : on livre par lots utilisables séparément.
 - **B — fenêtre :** page du panneau (préparation, rappels cochables, démarrer,
   prêt, repères, terminer) et coque Electron flottante, sans fiche (les rappels
   sont la checklist déjà présente dans le manifeste).
-- **C — fiche :** `contexte` et `guide` dans le schéma, cartes de la fiche,
+- **C — fiche et duplication :** numérotation par numéro maximum, bouton et route
+  « Dupliquer cette session » (affiché aussi en préparation, à côté de « Démarrer »),
+  `contexte` et `guide` dans le schéma, cartes de la fiche,
   dérivation, `next` mis à jour.
 - **D — guide live :** `guide.js`, affichage du chrono et des points, repère
   `point`, `plan_realise` dans la timeline, prompt du rapport.
