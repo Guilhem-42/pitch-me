@@ -22,7 +22,13 @@ import {
 import { recupererDonneesSession } from './screenpipe.js';
 import { calculerTimeline } from './timeline.js';
 import { genererRapport } from './report.js';
+import { demarrerServeur } from './server.js';
 import { writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const COMMANDES = ['new', 'start', 'ready', 'mark', 'stop', 'report', 'serve', 'next'];
 
@@ -329,7 +335,21 @@ async function commandeReport(args) {
   manifest.statut = 'analyse';
   await ecrireManifeste(sessionDir, manifest);
 
-  console.log(`\n⏭️  Prochaine étape: consulter le dashboard (TODO)`);
+  console.log(`\n⏭️  Prochaine étape: node src/cli.js serve`);
+}
+
+/**
+ * Commande: serve
+ */
+async function commandeServe() {
+  const port = 3000;
+  const webDir = join(__dirname, '..', 'web');
+
+  console.log(`\n🚀 Démarrage du serveur dashboard...`);
+  demarrerServeur(port, webDir, CONFIG.SESSIONS_DIR);
+
+  // Bloquer l'exécution
+  await new Promise(() => {});
 }
 
 /**
@@ -373,6 +393,8 @@ async function main() {
         await commandeReport(commandeArgs);
         break;
       case 'serve':
+        await commandeServe();
+        break;
       case 'next':
         console.log(`⚠️  Commande "${commande}" pas encore implémentée`);
         break;
