@@ -1,6 +1,6 @@
 ---
 titre: Spécification du wrapper Pitch-Me (brief pour Claude Code CLI)
-version: 0.1
+version: 0.2
 maj: 2026-10-18
 statut: brouillon
 ---
@@ -181,8 +181,17 @@ et exige une confirmation (`o`) avant de lancer.
 
 ## Étapes
 
-Chaque étape se termine par un commit et un point d'arrêt : l'humain valide
-avant de passer à la suivante.
+Enchaîner les étapes sans demander de validation, avec au moins un commit par
+étape. Les seuls points d'arrêt sont :
+
+1. la fin de l'étape 0, pour la décision « instance dédiée ou instance
+   existante » (un humain tranche) ;
+2. le premier vrai `start` qui capte l'écran ou l'audio, pour le consentement ;
+3. un blocage que l'agent ne peut pas lever seul.
+
+Un critère de réussite non atteint n'est pas un point d'arrêt : corriger, puis
+continuer. En fin de parcours, un compte rendu court (ce qui tourne, ce qui
+manque).
 
 ### Étape 0 : explorer Screenpipe (1 h au plus)
 
@@ -289,3 +298,4 @@ général avant que l'étape 5 ne tourne.
 ## Révisions
 
 - 0.1 (2026-10-18) : première version.
+- 0.2 (2026-10-18) : étapes enchaînées, trois points d'arrêt seulement.
