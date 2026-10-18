@@ -1,0 +1,15 @@
+{
+  "session_id": "2026-10-18-s00",
+  "debut": "2026-10-18T13:00:00Z",
+  "pret": "2026-10-18T13:02:00Z",
+  "fin": "2026-10-18T13:08:50Z",
+  "duree_s": 530,
+  "duree_preparation_s": 120,
+  "duree_live_s": 410,
+  "fenetres": [],
+  "temps_par_app": [],
+  "changements_fenetre": 10,
+  "hors_cadre": [],
+  "reperes": [],
+  "extraits_texte": []
+}

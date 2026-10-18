@@ -23,7 +23,7 @@ import { recupererDonneesSession } from './screenpipe.js';
 import { calculerTimeline } from './timeline.js';
 import { genererRapport } from './report.js';
 import { demarrerServeur } from './server.js';
-import { writeFile } from 'node:fs/promises';
+import { writeFile, readFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -353,6 +353,68 @@ async function commandeServe() {
 }
 
 /**
+ * Commande: next <id>
+ */
+async function commandeNext(args) {
+  if (args.length === 0) {
+    console.error('Erreur: ID de session manquant');
+    console.log('Usage: next <id>');
+    process.exit(1);
+  }
+
+  const idPrecedent = args[0];
+  const sessionDirPrecedente = join(CONFIG.SESSIONS_DIR, idPrecedent);
+
+  // Lire le rapport de la session précédente
+  let reportPrecedent;
+  try {
+    const reportPath = join(sessionDirPrecedente, 'report.json');
+    const content = await readFile(reportPath, 'utf-8');
+    reportPrecedent = JSON.parse(content);
+  } catch {
+    console.error('Erreur: la session précédente doit avoir un rapport');
+    console.log('Utilisez "report" pour générer le rapport');
+    process.exit(1);
+  }
+
+  // Lire le manifeste précédent pour récupérer le titre
+  const manifestPrecedent = await lireManifeste(sessionDirPrecedente);
+
+  // Générer un nouveau titre
+  const titre = `${manifestPrecedent.titre} (suite)`;
+
+  // Créer la nouvelle session
+  const id = await genererIdSession(CONFIG.SESSIONS_DIR);
+  const sessionDir = join(CONFIG.SESSIONS_DIR, id);
+
+  await creerDossierSession(sessionDir);
+  await creerDossierSession(join(sessionDir, 'screenpipe'));
+
+  // Créer le manifeste en reprenant la checklist du rapport précédent
+  const manifest = {
+    ...creerManifeste(id, titre),
+    objectif: manifestPrecedent.objectif,
+    criteres: manifestPrecedent.criteres,
+    duree_cible_s: manifestPrecedent.duree_cible_s,
+    fenetres_prevues: manifestPrecedent.fenetres_prevues,
+    audio: manifestPrecedent.audio,
+    session_precedente: idPrecedent,
+    checklist: reportPrecedent.checklist_suivante
+  };
+
+  await ecrireManifeste(sessionDir, manifest);
+
+  console.log(`✅ Session suivante créée: ${id}`);
+  console.log(`📁 Dossier: ${sessionDir}`);
+  console.log(`🔗 Session précédente: ${idPrecedent}`);
+  console.log(`\n📝 Checklist pré-remplie:`);
+  reportPrecedent.checklist_suivante.forEach(item => {
+    console.log(`   ☐ ${item.texte}`);
+  });
+  console.log(`\n⏭️  Prochaine étape: node src/cli.js start ${id}`);
+}
+
+/**
  * Point d'entrée
  */
 async function main() {
@@ -396,7 +458,7 @@ async function main() {
         await commandeServe();
         break;
       case 'next':
-        console.log(`⚠️  Commande "${commande}" pas encore implémentée`);
+        await commandeNext(commandeArgs);
         break;
     }
   } catch (err) {
