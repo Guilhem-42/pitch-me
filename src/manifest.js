@@ -15,8 +15,20 @@ export async function genererIdSession(sessionsDir) {
   try {
     const { readdir } = await import('node:fs/promises');
     const sessions = await readdir(sessionsDir);
-    const sessionsDuJour = sessions.filter(s => s.startsWith(date));
-    const numero = sessionsDuJour.length + 1;
+
+    // Filtrer les sessions du jour et extraire leurs numéros
+    const numeros = sessions
+      .filter(s => s.startsWith(date))
+      .map(s => {
+        const match = s.match(/^[\d-]+-s(\d+)$/);
+        return match ? parseInt(match[1], 10) : null;
+      })
+      .filter(n => n !== null);
+
+    // Le prochain numéro est le maximum + 1, ou 1 si aucune session
+    const maxNumero = numeros.length > 0 ? Math.max(...numeros) : 0;
+    const numero = maxNumero + 1;
+
     return `${date}-s${numero.toString().padStart(2, '0')}`;
   } catch (err) {
     // Si le dossier n'existe pas encore, c'est la première session
