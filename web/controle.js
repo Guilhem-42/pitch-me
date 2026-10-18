@@ -437,17 +437,7 @@ function attachEvents() {
     }
   });
 
-  document.getElementById('btn-duplicate-prep').addEventListener('click', async () => {
-    try {
-      const manifest = await api('POST', `/api/session/${state.sessionId}/dupliquer`);
-      state.sessionId = manifest.id;
-      state.manifest = manifest;
-      await loadSessions();
-      renderCurrentView();
-    } catch (err) {
-      showError(err.message);
-    }
-  });
+  document.getElementById('btn-duplicate-prep').addEventListener('click', event => dupliquerAvecRetour(event.currentTarget));
 
   document.getElementById('btn-back-prep').addEventListener('click', () => {
     state.sessionId = null;
@@ -601,23 +591,41 @@ function attachEvents() {
     }
   });
 
-  document.getElementById('btn-duplicate-done').addEventListener('click', async () => {
-    try {
-      const manifest = await api('POST', `/api/session/${state.sessionId}/dupliquer`);
-      state.sessionId = manifest.id;
-      state.manifest = manifest;
-      await loadSessions();
-      renderCurrentView();
-    } catch (err) {
-      showError(err.message);
-    }
-  });
+  document.getElementById('btn-duplicate-done').addEventListener('click', event => dupliquerAvecRetour(event.currentTarget));
 
   document.getElementById('btn-back-done').addEventListener('click', () => {
     state.sessionId = null;
     state.manifest = null;
     showView('view-select');
   });
+}
+
+// Duplication avec retour visuel : le bouton est désactivé pendant l'appel (pas de
+// double clic), puis affiche l'identifiant de la copie pendant quelques secondes.
+async function dupliquerAvecRetour(bouton) {
+  if (bouton.disabled || !state.sessionId) {
+    return;
+  }
+  const libelle = bouton.dataset.libelle || bouton.textContent;
+  bouton.dataset.libelle = libelle;
+  bouton.disabled = true;
+  bouton.textContent = 'Duplication…';
+  try {
+    const manifest = await api('POST', `/api/session/${state.sessionId}/dupliquer`);
+    bouton.textContent = `Dupliquée ✓ ${manifest.id}`;
+    // Rafraîchir la liste sans quitter la vue courante (loadSessions() y ramènerait)
+    state.sessions = await api('GET', '/api/sessions');
+    renderSessionList();
+  } catch (err) {
+    bouton.textContent = libelle;
+    bouton.disabled = false;
+    showError(err.message);
+    return;
+  }
+  setTimeout(() => {
+    bouton.textContent = libelle;
+    bouton.disabled = false;
+  }, 3000);
 }
 
 // Démarrer l'app
