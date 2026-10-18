@@ -74,6 +74,29 @@ export async function majFiche(id, contexte) {
 }
 
 /**
+ * Met à jour le guide du manifeste
+ * @param {string} id - ID de session
+ * @param {Object} guide - Guide à écrire
+ * @returns {Promise<Object>} Manifeste mis à jour
+ */
+export async function majGuide(id, guide) {
+  const sessionDir = join(CONFIG.SESSIONS_DIR, id);
+  const manifest = await lireManifeste(sessionDir);
+
+  if (manifest.statut !== 'preparation') {
+    throw new ErreurSession(
+      ERREUR.ETAT_INVALIDE,
+      'Le guide ne peut être modifié qu\'en préparation'
+    );
+  }
+
+  manifest.guide = guide;
+  await ecrireManifeste(sessionDir, manifest);
+
+  return manifest;
+}
+
+/**
  * Coche un élément de checklist
  * @param {string} id - ID de session
  * @param {number} index - Index de l'élément dans la checklist

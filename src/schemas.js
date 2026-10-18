@@ -3,7 +3,7 @@ import { z } from 'zod';
 // Schéma pour les repères
 export const RepereSchema = z.object({
   t: z.string().datetime(), // ISO 8601
-  type: z.enum(['pret', 'blocage', 'ok', 'note']),
+  type: z.enum(['pret', 'blocage', 'ok', 'note', 'point']),
   texte: z.string()
 });
 
@@ -18,6 +18,21 @@ export const ChecklistItemSchema = z.object({
 export const FenetrePrevueSchema = z.object({
   app: z.string(),
   motif: z.string()
+});
+
+// Schéma pour un point du guide
+export const PointGuideSchema = z.object({
+  id: z.string(),
+  titre: z.string(),
+  t_cible_s: z.number().nonnegative(),
+  important: z.boolean().default(false)
+});
+
+// Schéma pour le guide live
+export const GuideSchema = z.object({
+  points: z.array(PointGuideSchema),
+  rappels_fin: z.array(z.string()),
+  alerte_fin_s: z.number().positive().default(10)
 });
 
 // Schéma pour le manifeste
@@ -35,7 +50,8 @@ export const ManifestSchema = z.object({
   debut: z.string().datetime().nullable(),
   pret: z.string().datetime().nullable(),
   fin: z.string().datetime().nullable(),
-  statut: z.enum(['preparation', 'live', 'termine', 'analyse'])
+  statut: z.enum(['preparation', 'live', 'termine', 'analyse']),
+  guide: GuideSchema.nullable().default(null)
 });
 
 // Schéma pour une fenêtre dans la timeline

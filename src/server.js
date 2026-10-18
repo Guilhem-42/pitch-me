@@ -8,6 +8,7 @@ import {
   pret,
   repere,
   arreter,
+  majGuide,
   ErreurSession
 } from './session-service.js';
 
@@ -284,6 +285,34 @@ export function demarrerServeur(port, webDir, sessionsDir) {
 
         try {
           const result = await arreter(body.id);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(result));
+        } catch (err) {
+          const status = err instanceof ErreurSession ? 400 : 500;
+          res.writeHead(status, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message, code: err.code }));
+        }
+        return;
+      }
+
+      // Route: PATCH /api/guide - Modifier le guide
+      if (path === '/api/guide' && req.method === 'PATCH') {
+        const erreur = validerRequeteEcriture(req, jeton);
+        if (erreur) {
+          res.writeHead(erreur.status, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: erreur.message }));
+          return;
+        }
+
+        const body = await lireCorps(req);
+        if (!body.id || !body.guide) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'id et guide requis' }));
+          return;
+        }
+
+        try {
+          const result = await majGuide(body.id, body.guide);
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify(result));
         } catch (err) {

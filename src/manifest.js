@@ -45,7 +45,8 @@ export function creerManifeste(id, titre) {
     debut: null,
     pret: null,
     fin: null,
-    statut: 'preparation'
+    statut: 'preparation',
+    guide: null
   };
 }
 
