@@ -1,3 +1,5 @@
+import { etatGuide } from '/guide.js';
+
 // État global
 let state = {
   token: null,
@@ -5,7 +7,8 @@ let state = {
   sessions: [],
   manifest: null,
   etat: null,
-  chronoInterval: null
+  chronoInterval: null,
+  guideEtat: null
 };
 
 // API client
@@ -234,6 +237,7 @@ function renderLiveAfter() {
   }
 
   updateChrono();
+  updateGuide();
 
   const target = state.manifest.duree_cible_s
     ? `Cible : ${formatTime(state.manifest.duree_cible_s)}`
@@ -252,6 +256,62 @@ function updateChrono() {
   const elapsed = Math.floor((now - pret) / 1000);
 
   document.getElementById('chrono').textContent = formatTime(elapsed);
+  updateGuide();
+}
+
+// Mettre à jour le guide
+function updateGuide() {
+  if (!state.manifest) return;
+
+  const maintenant = new Date();
+  state.guideEtat = etatGuide(state.manifest, maintenant);
+
+  if (!state.guideEtat) {
+    // Pas de guide
+    document.getElementById('guide-progress').classList.add('hidden');
+    document.getElementById('guide-point').classList.add('hidden');
+    document.getElementById('guide-rappels').classList.add('hidden');
+    return;
+  }
+
+  // Barre de progression
+  const progressBar = document.getElementById('guide-progress-bar');
+  const progressPercent = Math.min(state.guideEtat.progression * 100, 100);
+  progressBar.style.width = `${progressPercent}%`;
+  document.getElementById('guide-progress').classList.remove('hidden');
+
+  // Point attendu
+  if (state.guideEtat.pointAttendu) {
+    document.getElementById('guide-point-titre').textContent = state.guideEtat.pointAttendu.titre;
+    document.getElementById('guide-point').classList.remove('hidden');
+
+    // Points en retard
+    if (state.guideEtat.pointsEnRetard.length > 1) {
+      const retard = `${state.guideEtat.pointsEnRetard.length} points en retard`;
+      document.getElementById('guide-point-retard').textContent = retard;
+      document.getElementById('guide-point-retard').classList.remove('hidden');
+    } else {
+      document.getElementById('guide-point-retard').classList.add('hidden');
+    }
+  } else {
+    document.getElementById('guide-point').classList.add('hidden');
+  }
+
+  // Rappels de fin
+  if (state.guideEtat.fenetreFinale && state.guideEtat.rappels_fin.length > 0) {
+    const liste = document.getElementById('guide-rappels-liste');
+    liste.innerHTML = '';
+    state.guideEtat.rappels_fin.forEach(rappel => {
+      const div = document.createElement('div');
+      div.style.padding = '4px 0';
+      div.style.fontSize = '14px';
+      div.textContent = `• ${rappel}`;
+      liste.appendChild(div);
+    });
+    document.getElementById('guide-rappels').classList.remove('hidden');
+  } else {
+    document.getElementById('guide-rappels').classList.add('hidden');
+  }
 }
 
 // Vue terminée
@@ -271,6 +331,19 @@ async function toggleCheck(index) {
     // Pour l'instant, on simule juste localement
     state.manifest.checklist[index].fait = !state.manifest.checklist[index].fait;
     renderCurrentView();
+  } catch (err) {
+    showError(err.message);
+  }
+}
+
+// Valider un point du guide
+async function validerPoint(pointId) {
+  try {
+    await api('POST', '/api/mark', { id: state.sessionId, type: 'point', texte: pointId });
+    // Recharger le manifeste pour mettre à jour les repères
+    const data = await api('GET', `/api/session/${state.sessionId}`);
+    state.manifest = data.manifest;
+    updateGuide();
   } catch (err) {
     showError(err.message);
   }
@@ -398,6 +471,25 @@ function attachEvents() {
       renderCurrentView();
     } catch (err) {
       showError(err.message);
+    }
+  });
+
+  // Guide : clic sur le point pour valider
+  document.getElementById('guide-point-titre').addEventListener('click', async () => {
+    if (state.guideEtat && state.guideEtat.pointAttendu) {
+      await validerPoint(state.guideEtat.pointAttendu.id);
+    }
+  });
+
+  // Guide : touche Entrée pour valider le point
+  document.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter' && state.guideEtat && state.guideEtat.pointAttendu) {
+      // Seulement si on est dans la vue live
+      const currentView = document.getElementById('view-live-after');
+      if (!currentView.classList.contains('hidden')) {
+        e.preventDefault();
+        await validerPoint(state.guideEtat.pointAttendu.id);
+      }
     }
   });
 
