@@ -205,14 +205,19 @@
 
     #btn-fermer {
       margin-left: auto;
-      padding: 10px 20px;
+      width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       border: none;
       border-radius: 12px;
       background: #4c1d95;
       color: white;
-      font-size: 14px;
       cursor: pointer;
     }
+
+    #btn-fermer[hidden] { display: none; }
 
     #btn-fermer:hover { background: #3b1676; }
 
@@ -244,8 +249,10 @@
       <select id="session-select">
         <option value="">Chargement...</option>
       </select>
-      <button id="btn-fermer" type="button" hidden>Fermer la fenêtre</button>
       <button id="btn-supprimer" type="button" title="Déplacer la session dans la corbeille">Supprimer</button>
+      <button id="btn-fermer" type="button" title="Fermer la fenêtre" aria-label="Fermer la fenêtre" hidden>
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+      </button>
     </div>
 
     <div id="content" class="loading">Chargement...</div>
