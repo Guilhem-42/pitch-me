@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pitch-Me · Contrôle [pitch-me-ctrl]</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      padding: 12px;
+      width: 380px;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #111;
+    }
+
+    h2 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 12px;
+      margin-bottom: 8px;
+      color: #111;
+    }
+
+    .card {
+      background: white;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    button {
+      background: #007AFF;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    button:hover {
+      background: #0051D5;
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    button.secondary {
+      background: #6c757d;
+    }
+
+    button.secondary:hover {
+      background: #5a6268;
+    }
+
+    button.danger {
+      background: #dc3545;
+    }
+
+    button.danger:hover {
+      background: #c82333;
+    }
+
+    .field {
+      margin-bottom: 8px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    .field input[type="text"] {
+      width: 100%;
+      padding: 6px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 6px 0;
+      gap: 8px;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      margin-top: 2px;
+      cursor: pointer;
+    }
+
+    .checkbox-item label {
+      flex: 1;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .chrono {
+      font-size: 48px;
+      font-weight: 700;
+      text-align: center;
+      margin: 16px 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .chrono-target {
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .indicator.ok {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .indicator.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .indicator.warning {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .status-dot.green {
+      background: #28a745;
+    }
+
+    .status-dot.red {
+      background: #dc3545;
+    }
+
+    .status-dot.yellow {
+      background: #ffc107;
+    }
+
+    .session-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .session-item {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 4px;
+      cursor: pointer;
+    }
+
+    .session-item:hover {
+      background: #f0f0f0;
+    }
+
+    .session-item.active {
+      background: #e3f2fd;
+      border-color: #007AFF;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .error-banner {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      border: 1px solid #f5c6cb;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .action-buttons button {
+      flex: 1;
+      margin-top: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>Pitch-Me · Contrôle</h1>
+
+    <!-- Bandeau d'erreur -->
+    <div id="error" class="error-banner hidden"></div>
+
+    <!-- Vue: sélection de session -->
+    <div id="view-select" class="hidden">
+      <div class="card">
+        <h2>Choisir une session</h2>
+        <div id="session-list" class="session-list"></div>
+        <button id="btn-new">Nouvelle session</button>
+      </div>
+    </div>
+
+    <!-- Vue: création simple (sans fiche pour le lot B) -->
+    <div id="view-new" class="hidden">
+      <div class="card">
+        <h2>Nouvelle session</h2>
+        <div class="field">
+          <label>Titre</label>
+          <input type="text" id="new-titre" placeholder="Ex: Pitch v2" />
+        </div>
+        <button id="btn-create">Créer</button>
+        <button class="secondary" id="btn-cancel-new">Annuler</button>
+      </div>
+    </div>
+
+    <!-- Vue: préparation -->
+    <div id="view-prep" class="hidden">
+      <div class="card">
+        <h2 id="prep-titre"></h2>
+        <div class="field">
+          <label>Objectif</label>
+          <p id="prep-objectif"></p>
+        </div>
+        <div class="field">
+          <label>Durée cible</label>
+          <p id="prep-duree"></p>
+        </div>
+      </div>
+
+      <div class="card" id="prep-checks">
+        <h2>Rappels</h2>
+        <div id="prep-checklist"></div>
+      </div>
+
+      <div id="prep-blockers"></div>
+
+      <button id="btn-start-capture">Démarrer la capture</button>
+      <button class="secondary" id="btn-back-prep">Changer de session</button>
+    </div>
+
+    <!-- Vue: live avant prêt -->
+    <div id="view-live-before" class="hidden">
+      <div class="card">
+        <h2>Capture en cours</h2>
+        <div id="live-checks">
+          <h2>Rappels restants</h2>
+          <div id="live-checklist"></div>
+        </div>
+      </div>
+
+      <div id="live-indicators"></div>
+
+      <button id="btn-ready">Je suis prêt — lancer le live</button>
+    </div>
+
+    <!-- Vue: live après prêt (mode compact) -->
+    <div id="view-live-after" class="hidden">
+      <div class="card">
+        <div class="chrono" id="chrono">00:00</div>
+        <div class="chrono-target" id="chrono-target"></div>
+      </div>
+
+      <div class="action-buttons">
+        <button class="secondary" id="btn-blocage">Blocage</button>
+        <button class="secondary" id="btn-ok">OK</button>
+      </div>
+
+      <div class="field">
+        <input type="text" id="note-text" placeholder="Note..." />
+        <button class="secondary" id="btn-note">Note</button>
+      </div>
+
+      <button class="danger" id="btn-stop">Terminer</button>
+    </div>
+
+    <!-- Vue: terminée -->
+    <div id="view-done" class="hidden">
+      <div class="card">
+        <h2>Session terminée</h2>
+        <p id="done-message">La capture est arrêtée.</p>
+      </div>
+
+      <button id="btn-report">Générer le rapport</button>
+      <div id="report-progress" class="hidden">
+        <div class="indicator ok">
+          <span class="status-dot green"></span>
+          <span>Génération en cours...</span>
+        </div>
+      </div>
+      <button class="secondary" id="btn-back-done">Changer de session</button>
+    </div>
+  </div>
+
+  <script type="module" src="/controle.js"></script>
+</body>
+</html>

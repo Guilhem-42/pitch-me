@@ -6,9 +6,14 @@
   "main": "src/cli.js",
   "scripts": {
     "test": "node --test src/**/*.test.js",
-    "cli": "node src/cli.js"
+    "cli": "node src/cli.js",
+    "panneau": "electron electron.js"
   },
-  "keywords": ["screenpipe", "pitch", "training"],
+  "keywords": [
+    "screenpipe",
+    "pitch",
+    "training"
+  ],
   "author": "",
   "license": "UNLICENSED",
   "engines": {
@@ -18,5 +23,8 @@
     "@anthropic-ai/sdk": "^0.32.1",
     "dotenv": "^16.4.7",
     "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "electron": "^34.5.8"
   }
 }
