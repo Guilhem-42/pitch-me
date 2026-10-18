@@ -148,7 +148,7 @@ export function demarrerServeur(port, webDir, sessionsDir) {
         ]);
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        const nb_frames = (!timeline || !report) ? compterFrames(sessionDir, manifest.debut, manifest.fin) : null;
+        const nb_frames = (!timeline || !report) ? await compterFrames(sessionDir, manifest.debut, manifest.fin) : null;
         res.end(JSON.stringify({ manifest, timeline, report, nb_frames }));
         return;
       }

@@ -66,3 +66,11 @@ describe('recupererDonneesDepuisSqlite', () => {
     );
   });
 });
+
+test('délègue à un processus node quand node:sqlite est indisponible', async () => {
+  const { execFileSync } = await import('node:child_process');
+  const { fileURLToPath } = await import('node:url');
+  const worker = fileURLToPath(new URL('./sqlite-worker.js', import.meta.url));
+  const sortie = execFileSync(process.execPath, ['--no-warnings', worker, 'compter', racine, '2026-10-18T06:07:09.526Z', '2026-10-18T06:07:28.912Z'], { encoding: 'utf-8' });
+  assert.equal(JSON.parse(sortie), 3);
+});
