@@ -9,7 +9,7 @@ config();
  */
 export const CONFIG = {
   ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
-  ANTHROPIC_MODEL: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5-20250929',
+  ANTHROPIC_MODEL: process.env.ANTHROPIC_MODEL || '',
   SCREENPIPE_API_KEY: process.env.SCREENPIPE_API_KEY || '',
   SCREENPIPE_PORT: parseInt(process.env.SCREENPIPE_PORT || '3035', 10),
   SESSIONS_DIR: resolve(process.env.SESSIONS_DIR || './sessions')
@@ -25,6 +25,10 @@ export function validerConfig(needAnthropic = false, needScreenpipe = true) {
 
   if (needAnthropic && !CONFIG.ANTHROPIC_API_KEY) {
     errors.push('ANTHROPIC_API_KEY manquante dans .env');
+  }
+
+  if (needAnthropic && !CONFIG.ANTHROPIC_MODEL) {
+    errors.push('ANTHROPIC_MODEL manquante dans .env (identifiant du modèle utilisé pour le bilan)');
   }
 
   if (needScreenpipe && !CONFIG.SCREENPIPE_API_KEY) {
