@@ -1,0 +1,22 @@
+{
+  "name": "pitch-me",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Wrapper Screenpipe pour sessions d'entraînement cadrées",
+  "main": "src/cli.js",
+  "scripts": {
+    "test": "node --test src/**/*.test.js",
+    "cli": "node src/cli.js"
+  },
+  "keywords": ["screenpipe", "pitch", "training"],
+  "author": "",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "dotenv": "^16.4.7",
+    "zod": "^3.24.1"
+  }
+}

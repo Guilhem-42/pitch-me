@@ -1,0 +1,40 @@
+{
+  "id": "2026-10-18-s01",
+  "titre": "Pitch v1 en visio",
+  "objectif": "Présenter le squelette en 5 minutes sans quitter le cadre prévu",
+  "criteres": [
+    "durée entre 4 et 6 minutes",
+    "aucune fenêtre hors cadre"
+  ],
+  "duree_cible_s": 300,
+  "fenetres_prevues": [
+    {
+      "app": "Google Chrome",
+      "motif": "deck en plein écran"
+    },
+    {
+      "app": "zoom.us",
+      "motif": "visio"
+    }
+  ],
+  "audio": true,
+  "session_precedente": null,
+  "checklist": [
+    {
+      "id": "c1",
+      "texte": "Fermer les notifications",
+      "fait": false
+    }
+  ],
+  "reperes": [
+    {
+      "t": "2026-10-18T14:03:12Z",
+      "type": "blocage",
+      "texte": "Problème de connexion"
+    }
+  ],
+  "debut": "2026-10-18T14:00:00Z",
+  "pret": "2026-10-18T14:02:10Z",
+  "fin": "2026-10-18T14:07:40Z",
+  "statut": "termine"
+}
