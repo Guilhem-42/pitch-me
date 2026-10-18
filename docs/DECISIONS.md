@@ -59,3 +59,16 @@ plage horaire.
   après analyse.
 
 **Statut :** Proposée — en attente de validation par un humain de l'équipe.
+
+## 2026-10-18 — Instance dédiée par session : validée
+
+**Contexte :** la décision du même jour « Instance Screenpipe dédiée par
+session », proposée à l'issue de l'étape 0, attendait la validation d'un humain.
+**Décision :** validée par Guilhem, avec une modification : le `data-dir` d'une
+session est **conservé jusqu'à la fin du hackathon** et supprimé seulement sur
+demande explicite d'un humain. Cette modification remplace la suppression
+automatique après analyse prévue dans la proposition.
+**Conséquences :** le wrapper ne supprime jamais un `data-dir`. L'audio n'ayant
+pas été testé en instance dédiée, ce test ouvre l'étape 1 ; en cas de conflit
+sur le micro, repli : instance dédiée avec audio, instance de l'application
+desktop arrêtée pendant la session.
