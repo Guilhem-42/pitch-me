@@ -122,3 +122,23 @@ des points abordés par la transcription (reportée après le hackathon).
 - L'exclusion des captures par `setContentProtection` est à vérifier ; le
   marqueur de titre reste le filet de sécurité.
 **Statut :** Proposée — en attente de validation par un humain de l'équipe.
+
+## 2026-10-18 — Panneau de contrôle web en fenêtre popup : validée
+
+**Contexte :** la décision du même jour « Panneau de contrôle web en fenêtre
+popup (proposée) » attendait la validation d'un humain.
+**Décision :** validée par Guilhem, telle que proposée, avec l'amendement de la
+décision « Coque Electron flottante et guide live » sur la forme du panneau.
+**Conséquences :** l'API, la sécurité (jeton, `Host`, consentement), le service
+partagé et le marqueur de titre de `SPEC_controle.md` s'appliquent sans changement.
+
+## 2026-10-18 — Coque Electron flottante et guide live : validée
+
+**Contexte :** la décision du même jour « Coque Electron flottante et guide live
+(proposée) » attendait la validation d'un humain.
+**Décision :** validée par Guilhem, telle que proposée.
+**Conséquences :** le panneau est une page web affichée dans une coque Electron
+flottante ; `electron` devient une `devDependency` ; le manifeste gagne `guide`
+(optionnel) et les repères le type `point`. Livraison par lots A à D, le lot E
+est reporté après le hackathon. L'exclusion des captures par
+`setContentProtection` reste à vérifier en test réel.
