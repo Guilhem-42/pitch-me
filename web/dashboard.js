@@ -52,11 +52,48 @@ function afficherDashboard(data) {
   const { manifest, timeline, report } = data;
 
   if (!timeline || !report) {
-    document.getElementById('content').innerHTML = `
-      <div class="section">
-        <p>Timeline ou rapport non disponible. Exécutez "node src/cli.js report ${manifest.id}"</p>
-      </div>
-    `;
+    const zone = document.getElementById('content');
+    const section = document.createElement('div');
+    section.className = 'section';
+    const msg = document.createElement('p');
+    section.appendChild(msg);
+    zone.innerHTML = '';
+    zone.appendChild(section);
+
+    const fini = manifest.statut === 'termine' || manifest.statut === 'analyse';
+    if (!fini) {
+      msg.textContent = `Session non terminée (${manifest.statut}) : pas encore de rapport.`;
+    } else if (!data.nb_frames) {
+      msg.textContent = 'Session vide : aucune capture dans la base.';
+    } else if (manifest.statut !== 'termine') {
+      msg.textContent = 'Timeline ou rapport non disponible.';
+    } else {
+      msg.textContent = 'Timeline ou rapport non disponible - Voulez-vous le générer maintenant ?';
+      const bouton = document.createElement('button');
+      bouton.type = 'button';
+      bouton.textContent = 'Générer maintenant';
+      bouton.style.marginLeft = '12px';
+      bouton.addEventListener('click', async () => {
+        bouton.disabled = true;
+        msg.textContent = 'Génération en cours… (environ une minute)';
+        try {
+          const { token } = await (await fetch('/api/token')).json();
+          const r = await fetch(`/api/session/${manifest.id}/rapport`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: '{}'
+          });
+          const corps = await r.json();
+          if (!r.ok) throw new Error(corps.error || 'Échec');
+          chargerSession(manifest.id);
+        } catch (err) {
+          msg.textContent = `Génération impossible : ${err.message}`;
+          bouton.disabled = false;
+          section.appendChild(bouton);
+        }
+      });
+      section.appendChild(bouton);
+    }
     return;
   }
 
@@ -80,7 +117,7 @@ function afficherDashboard(data) {
       <div class="indicateurs">
         <div class="indicateur">
           <div class="indicateur-label">Durée live</div>
-          <div class="indicateur-valeur">${timeline.duree_live_s}s</div>
+          <div class="indicateur-valeur">${Number(timeline.duree_live_s).toFixed(2)}s</div>
         </div>
         <div class="indicateur">
           <div class="indicateur-label">Changements de fenêtre</div>
@@ -121,7 +158,7 @@ function afficherDashboard(data) {
             <div class="constat-titre">${c.titre}</div>
             <div class="constat-detail">${c.detail}</div>
             <div class="constat-preuve" onclick="scrollToTimestamp(${c.preuve.t_s})">
-              Preuve : ${c.preuve.source} à ${c.preuve.t_s}s
+              Preuve : ${c.preuve.source} à ${Number(c.preuve.t_s).toFixed(2)}s
             </div>
           </div>
         `).join('')}
@@ -193,7 +230,7 @@ function afficherDashboard(data) {
 
     ${report.incertitudes.length > 0 ? `
       <div class="section">
-        <h2>Incertitudes</h2>
+        <h2>À revoir</h2>
         ${report.incertitudes.map(i => `
           <div style="padding:10px; background:#f8d7da; border-radius:4px; margin-bottom:8px;">
             ${i}
@@ -261,9 +298,14 @@ function creerGraphiqueFrise(timeline) {
         },
         tooltip: {
           callbacks: {
+            title: (items) => {
+              const f = timeline.fenetres[items[0].datasetIndex];
+              return `${f.app} - ${f.fenetre}`;
+            },
             label: (ctx) => {
-              const fenetre = timeline.fenetres[ctx.datasetIndex];
-              return `${fenetre.app}: ${fenetre.duree_s}s`;
+              const f = timeline.fenetres[ctx.datasetIndex];
+              const n = v => Number(v).toFixed(2);
+              return `${n(f.debut_s)}s → ${n(f.fin_s)}s (${n(f.duree_s)}s)`;
             }
           }
         }
@@ -273,6 +315,17 @@ function creerGraphiqueFrise(timeline) {
 }
 
 // Graphique du temps par app
+// Outillage (Pitch-Me, terminal…) : jamais compté comme application de présentation
+const OUTILLAGE = ['Claude', 'Electron', 'Terminal', 'iTerm2', 'screenpipe', 'Screenpipe', 'node'];
+
+// Applications prévues (fenêtres marquées « prévue »), sinon tout sauf l'outillage
+function appsUtiles(timeline) {
+  const prevues = new Set(timeline.fenetres.filter(f => f.prevue).map(f => f.app));
+  return timeline.temps_par_app.filter(t =>
+    prevues.size > 0 ? prevues.has(t.app) : !OUTILLAGE.includes(t.app)
+  );
+}
+
 function creerGraphiqueApps(timeline) {
   const canvas = document.getElementById('apps-chart');
   if (!canvas) return;
@@ -287,11 +340,11 @@ function creerGraphiqueApps(timeline) {
   graphiques.push(new Chart(canvas, {
     type: 'bar',
     data: {
-      labels: timeline.temps_par_app.map(t => t.app),
+      labels: appsUtiles(timeline).map(t => t.app),
       datasets: [{
         label: 'Durée (secondes)',
-        data: timeline.temps_par_app.map(t => t.duree_s),
-        backgroundColor: timeline.temps_par_app.map(t =>
+        data: appsUtiles(timeline).map(t => Number(t.duree_s.toFixed(2))),
+        backgroundColor: appsUtiles(timeline).map(t =>
           couleurs[t.app] || '#999'
         )
       }]

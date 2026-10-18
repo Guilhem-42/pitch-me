@@ -80,3 +80,24 @@ export async function recupererDonneesDepuisSqlite(sessionDir, debut, fin) {
     db.close();
   }
 }
+
+/**
+ * Compte les frames capturées dans l'intervalle (aucun contenu lu).
+ * @returns {number} 0 si la base est absente ou illisible
+ */
+export function compterFrames(sessionDir, debut, fin) {
+  const dbPath = join(sessionDir, 'screenpipe', 'db.sqlite');
+  if (!debut || !fin || !existsSync(dbPath)) return 0;
+  let db;
+  try {
+    db = new DatabaseSync(dbPath, { readOnly: true });
+    const ligne = db.prepare(
+      'SELECT COUNT(*) AS n FROM frames WHERE julianday(timestamp) >= julianday(?) - 1.0 / 86400 AND julianday(timestamp) <= julianday(?) + 1.0 / 86400'
+    ).get(debut, fin);
+    return Number(ligne.n);
+  } catch {
+    return 0;
+  } finally {
+    db?.close();
+  }
+}

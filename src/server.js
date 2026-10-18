@@ -2,6 +2,7 @@ import { createServer } from 'node:http';
 import { readFile, readdir } from 'node:fs/promises';
 import { join, extname, resolve, sep } from 'node:path';
 import { randomBytes } from 'node:crypto';
+import { compterFrames } from './screenpipe-sqlite.js';
 import {
   creerSession,
   dupliquerSession,
@@ -11,6 +12,7 @@ import {
   arreter,
   majGuide,
   supprimerSession,
+  lancerRapport,
   ErreurSession
 } from './session-service.js';
 
@@ -146,7 +148,29 @@ export function demarrerServeur(port, webDir, sessionsDir) {
         ]);
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ manifest, timeline, report }));
+        const nb_frames = (!timeline || !report) ? compterFrames(sessionDir, manifest.debut, manifest.fin) : null;
+        res.end(JSON.stringify({ manifest, timeline, report, nb_frames }));
+        return;
+      }
+
+      // Route: POST /api/session/:id/rapport - Générer timeline et rapport
+      const matchRapport = path.match(/^\/api\/session\/([A-Za-z0-9_-]+)\/rapport$/);
+      if (matchRapport && req.method === 'POST') {
+        const erreur = validerRequeteEcriture(req, jeton);
+        if (erreur) {
+          res.writeHead(erreur.status, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: erreur.message }));
+          return;
+        }
+        try {
+          await lancerRapport(matchRapport[1]);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: true }));
+        } catch (err) {
+          const status = err instanceof ErreurSession ? 400 : 500;
+          res.writeHead(status, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message, code: err.code }));
+        }
         return;
       }
 
