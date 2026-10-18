@@ -12,6 +12,10 @@ function entreeCorrespond(item, t_s) {
   if (item === null || typeof item !== 'object') {
     return false;
   }
+  // Plan réalisé : on peut citer l'instant visé ou l'instant réel du point.
+  if (typeof item.t_cible_s === 'number') {
+    return item.t_cible_s === t_s || item.t_reel_s === t_s;
+  }
   if (typeof item.t_s === 'number') {
     return item.t_s === t_s;
   }

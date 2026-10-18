@@ -70,3 +70,19 @@ describe('validerComparaison', () => {
     assert.deepEqual(validerComparaison({ comparaison: null }, timeline, null), []);
   });
 });
+
+import { test as testPlan } from 'node:test';
+import assertPlan from 'node:assert/strict';
+import { validerPreuves as validerPlan } from './preuves.js';
+
+testPlan('preuve sur plan_realise : cible ou réel acceptés', () => {
+  const timeline = { duree_s: 60, plan_realise: [
+    { id: 'a', titre: 'A', t_cible_s: 20, t_reel_s: 21 },
+    { id: 'b', titre: 'B', t_cible_s: 40, t_reel_s: null }
+  ] };
+  const rapport = (t_s) => ({ constats: [{ titre: 'x', preuve: { source: 'plan_realise', t_s } }] });
+  assertPlan.deepEqual(validerPlan(rapport(20), timeline), []);
+  assertPlan.deepEqual(validerPlan(rapport(21), timeline), []);
+  assertPlan.deepEqual(validerPlan(rapport(40), timeline), []);
+  assertPlan.equal(validerPlan(rapport(33), timeline).length, 1);
+});
