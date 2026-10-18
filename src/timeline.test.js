@@ -233,4 +233,16 @@ describe('calculerTimeline', () => {
 
     assert.equal(timeline.plan_realise, undefined);
   });
+
+  test('audio seulement en préparation : pas de champ parole nul, timeline valide', async () => {
+    const { TimelineSchema } = await import('./schemas.js');
+    const manifest = await chargerFixture('manifest-session1.json');
+    const donnees = await chargerFixture('donnees-session1.json');
+    const audio = [{ content: { timestamp: manifest.debut, transcription: 'bonjour' } }];
+
+    const timeline = calculerTimeline(manifest, { ...donnees, audio });
+
+    assert.equal(timeline.parole, undefined);
+    assert.doesNotThrow(() => TimelineSchema.parse(timeline));
+  });
 });

@@ -344,7 +344,11 @@ export function calculerTimeline(manifest, donnees) {
   // Ajouter les données audio si présentes
   if (manifest.audio && audio.length > 0) {
     timeline.silences = detecterSilences(audio, debut, pret);
-    timeline.parole = calculerParole(audio, debut, pret, fin);
+    // Pas de parole pendant la phase live (audio seulement en préparation) : on omet le champ
+    const parole = calculerParole(audio, debut, pret, fin);
+    if (parole) {
+      timeline.parole = parole;
+    }
   }
 
   // Ajouter le plan réalisé si guide présent
