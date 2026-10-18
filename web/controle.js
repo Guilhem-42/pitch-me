@@ -437,6 +437,18 @@ function attachEvents() {
     }
   });
 
+  document.getElementById('btn-duplicate-prep').addEventListener('click', async () => {
+    try {
+      const manifest = await api('POST', `/api/session/${state.sessionId}/dupliquer`);
+      state.sessionId = manifest.id;
+      state.manifest = manifest;
+      await loadSessions();
+      renderCurrentView();
+    } catch (err) {
+      showError(err.message);
+    }
+  });
+
   document.getElementById('btn-back-prep').addEventListener('click', () => {
     state.sessionId = null;
     state.manifest = null;
@@ -584,6 +596,18 @@ function attachEvents() {
       document.getElementById('report-progress').classList.remove('hidden');
       // Note: POST /api/session/:id/report n'existe pas encore, on utilise le CLI pour le lot B
       showError('Utilisez le CLI pour générer le rapport : node src/cli.js report ' + state.sessionId);
+    } catch (err) {
+      showError(err.message);
+    }
+  });
+
+  document.getElementById('btn-duplicate-done').addEventListener('click', async () => {
+    try {
+      const manifest = await api('POST', `/api/session/${state.sessionId}/dupliquer`);
+      state.sessionId = manifest.id;
+      state.manifest = manifest;
+      await loadSessions();
+      renderCurrentView();
     } catch (err) {
       showError(err.message);
     }
