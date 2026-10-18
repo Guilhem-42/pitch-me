@@ -21,6 +21,7 @@ import {
 } from './screenpipe-process.js';
 import { recupererDonneesSession } from './screenpipe.js';
 import { calculerTimeline } from './timeline.js';
+import { genererRapport } from './report.js';
 import { writeFile } from 'node:fs/promises';
 
 const COMMANDES = ['new', 'start', 'ready', 'mark', 'stop', 'report', 'serve', 'next'];
@@ -260,7 +261,7 @@ async function commandeStop(args) {
  * Commande: report <id>
  */
 async function commandeReport(args) {
-  validerConfig(false, true);
+  validerConfig(true, true); // Nécessite les deux clés API
 
   if (args.length === 0) {
     console.error('Erreur: ID de session manquant');
@@ -305,11 +306,30 @@ async function commandeReport(args) {
   console.log(`   - Changements de fenêtre: ${timeline.changements_fenetre}`);
   console.log(`   - Fenêtres hors cadre: ${timeline.hors_cadre.length}`);
 
+  // Générer le rapport via LLM
+  console.log(`\n🤖 Génération du rapport via LLM...`);
+  const rapport = await genererRapport(
+    manifest,
+    timeline,
+    CONFIG.SESSIONS_DIR,
+    CONFIG.ANTHROPIC_API_KEY,
+    CONFIG.ANTHROPIC_MODEL
+  );
+
+  // Écrire report.json
+  const reportPath = join(sessionDir, 'report.json');
+  await writeFile(reportPath, JSON.stringify(rapport, null, 2), 'utf-8');
+
+  console.log(`✅ Rapport généré et sauvegardé`);
+  console.log(`   - Verdict: ${rapport.objectif_atteint.verdict}`);
+  console.log(`   - Constats: ${rapport.constats.length}`);
+  console.log(`   - Recommandations: ${rapport.recommandations.length}`);
+
   // Mettre à jour le statut
   manifest.statut = 'analyse';
   await ecrireManifeste(sessionDir, manifest);
 
-  console.log(`\n⏭️  Prochaine étape: générer le rapport LLM (TODO)`);
+  console.log(`\n⏭️  Prochaine étape: consulter le dashboard (TODO)`);
 }
 
 /**
