@@ -46,4 +46,91 @@ répétition de notre propre pitch, en plusieurs itérations.
 
 ## Démarrer
 
-[À compléter dès que le wrapper tourne.]
+### Installation
+
+1. Installer Node 20+
+2. Installer Screenpipe : voir [screenpipe.ai](https://screenpipe.ai)
+3. Installer les dépendances :
+   ```bash
+   npm install
+   ```
+4. Copier `.env.example` en `.env` et renseigner :
+   ```bash
+   cp .env.example .env
+   ```
+   - `ANTHROPIC_API_KEY` : clé API Claude (pour le rapport LLM)
+   - `SCREENPIPE_API_KEY` : clé Screenpipe (`npx -y screenpipe@latest auth token`)
+   - `SCREENPIPE_PORT` : port de l'instance dédiée (3035 par défaut)
+
+### Utilisation
+
+#### Créer une session
+
+```bash
+node src/cli.js new "Pitch v1 en visio"
+```
+
+Éditer `sessions/<id>/manifest.json` pour renseigner :
+- `objectif` : ce que vous voulez atteindre
+- `criteres` : critères de réussite
+- `fenetres_prevues` : applications autorisées
+- `audio` : `true` ou `false`
+
+#### Lancer la capture
+
+```bash
+node src/cli.js start <id>
+```
+
+Confirmation demandée avant de lancer la capture.
+
+#### Marquer le début du live
+
+Quand vous êtes prêt à commencer :
+
+```bash
+node src/cli.js ready <id>
+```
+
+#### Poser des repères pendant le live
+
+```bash
+node src/cli.js mark <id> blocage "je n'arrive pas à..."
+node src/cli.js mark <id> ok "ça fonctionne"
+```
+
+#### Arrêter la capture
+
+```bash
+node src/cli.js stop <id>
+```
+
+#### Générer le rapport
+
+Calcule la timeline et génère le rapport via LLM :
+
+```bash
+node src/cli.js report <id>
+```
+
+#### Consulter le dashboard
+
+```bash
+node src/cli.js serve
+```
+
+Ouvrir http://localhost:3000 dans le navigateur.
+
+#### Créer la session suivante
+
+Reprend la checklist et compare avec la session précédente :
+
+```bash
+node src/cli.js next <id>
+```
+
+### Tests
+
+```bash
+npm test
+```
