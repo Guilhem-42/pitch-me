@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import { readFile, readdir } from 'node:fs/promises';
-import { join, extname } from 'node:path';
+import { join, extname, resolve, sep } from 'node:path';
 
 const MIME_TYPES = {
   '.html': 'text/html',
@@ -56,6 +56,11 @@ export function demarrerServeur(port, webDir, sessionsDir) {
       if (path.startsWith('/api/session/')) {
         // Détails d'une session
         const id = path.replace('/api/session/', '');
+        if (!/^[A-Za-z0-9_-]+$/.test(id)) {
+          res.writeHead(400);
+          res.end('Bad Request');
+          return;
+        }
         const sessionDir = join(sessionsDir, id);
 
         const [manifest, timeline, report] = await Promise.all([
@@ -70,7 +75,13 @@ export function demarrerServeur(port, webDir, sessionsDir) {
       }
 
       // Fichiers statiques
-      const filePath = join(webDir, path);
+      const racine = resolve(webDir);
+      const filePath = resolve(racine, '.' + path);
+      if (!filePath.startsWith(racine + sep)) {
+        res.writeHead(403);
+        res.end('Forbidden');
+        return;
+      }
       const content = await readFile(filePath);
       const ext = extname(filePath);
       const mimeType = MIME_TYPES[ext] || 'application/octet-stream';
@@ -89,7 +100,8 @@ export function demarrerServeur(port, webDir, sessionsDir) {
     }
   });
 
-  server.listen(port, () => {
+  // Écoute sur la boucle locale uniquement : le dashboard affiche du texte d'écran.
+  server.listen(port, '127.0.0.1', () => {
     console.log(`\n🌐 Dashboard accessible sur http://localhost:${port}`);
     console.log(`   Ctrl+C pour arrêter`);
   });
