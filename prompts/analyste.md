@@ -53,9 +53,16 @@ Produis un rapport JSON structuré qui :
 
 ### TODOs détectés
 
-- Regarde les `extraits_texte` de timeline.json
-- Si tu vois des incohérences (ex. "Take" dans le deck alors que le projet s'appelle "Pitch-Me"), note-le dans `todo_detectes`
-- Source : `"extraits_texte"`
+- **Examine attentivement tous les `extraits_texte` de timeline.json**
+- Cherche des incohérences entre :
+  - Le titre du projet dans le manifeste
+  - Les noms, titres ou références dans les extraits de texte à l'écran
+  - Les fenêtres d'applications (titres, contenu visible)
+- **Exemple critique** : si le projet s'appelle "Pitch-Me" dans le manifeste mais que les extraits montrent "Take" ou un autre nom dans le deck ou les documents, c'est une incohérence majeure à signaler
+- Chaque incohérence détectée doit avoir :
+  - Un texte clair expliquant l'incohérence
+  - La source exacte : `"extraits_texte"`
+- **Sois proactif** : même une seule occurrence d'un nom différent dans les extraits mérite d'être signalée
 
 ### Incertitudes
 

@@ -113,7 +113,7 @@ export async function genererRapport(manifest, timeline, sessionsDir, apiKey, mo
   const timelinePrecedente = await chargerTimelinePrecedente(manifest.session_precedente, sessionsDir);
 
   // Construire le prompt utilisateur
-  const promptUtilisateur = construirePromptUtilisateur(manifest, timeline, rapportPrecedent, timelinePrecedente);
+  let promptUtilisateur = construirePromptUtilisateur(manifest, timeline, rapportPrecedent, timelinePrecedente);
 
   let tentative = 0;
   const maxTentatives = 2;
@@ -135,6 +135,9 @@ export async function genererRapport(manifest, timeline, sessionsDir, apiKey, mo
       });
 
       // Extraire le JSON de la réponse
+      if (!response.content || !response.content[0] || !response.content[0].text) {
+        throw new Error('Réponse API invalide: pas de contenu texte');
+      }
       const content = response.content[0].text;
       let jsonText = content;
 
