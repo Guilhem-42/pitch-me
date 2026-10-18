@@ -298,6 +298,29 @@ export async function arreter(id) {
 }
 
 /**
+ * Supprime une session en la déplaçant dans `sessions/_corbeille/` (récupérable).
+ * Refuse une session en cours de capture.
+ * @param {string} id - ID de session
+ * @returns {Promise<{id: string, corbeille: string}>}
+ */
+export async function supprimerSession(id) {
+  const sessionDir = dossierSession(id);
+  const { rename, mkdir } = await import('node:fs/promises');
+  const manifest = await lireManifeste(sessionDir).catch(() => {
+    throw new ErreurSession(ERREUR.INTROUVABLE, `Session introuvable : ${id}`);
+  });
+  const pid = await lirePid(sessionDir);
+  if (manifest.statut === 'live' || (pid && processusEnVie(pid))) {
+    throw new ErreurSession(ERREUR.ETAT_INVALIDE, 'Session en cours : arrêtez-la avant de la supprimer');
+  }
+  const corbeille = join(CONFIG.SESSIONS_DIR, '_corbeille');
+  await mkdir(corbeille, { recursive: true });
+  const cible = join(corbeille, `${id}-${Date.now()}`);
+  await rename(sessionDir, cible);
+  return { id, corbeille: '_corbeille' };
+}
+
+/**
  * Retourne l'état d'une session
  * @param {string} id - ID de session
  * @returns {Promise<Object>} État de la session

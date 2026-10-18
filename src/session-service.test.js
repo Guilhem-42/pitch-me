@@ -311,3 +311,30 @@ test('dupliquerSession ne touche jamais la session source', async () => {
     await rm(tmpDir, { recursive: true, force: true });
   }
 });
+
+test('supprimerSession déplace dans _corbeille et refuse une session live', async () => {
+  const { supprimerSession } = await import('./session-service.js');
+  const { access, readdir } = await import('node:fs/promises');
+  const { ecrireManifeste, lireManifeste } = await import('./manifest.js');
+  const tmpDir = await mkdtemp(join(tmpdir(), 'test-suppr-'));
+  const original = CONFIG.SESSIONS_DIR;
+  CONFIG.SESSIONS_DIR = tmpDir;
+  try {
+    const a = await creerSession('A supprimer');
+    const b = await creerSession('En cours');
+    const mb = await lireManifeste(b.sessionDir);
+    await ecrireManifeste(b.sessionDir, { ...mb, statut: 'live' });
+
+    await assert.rejects(() => supprimerSession(b.id), ErreurSession);
+    await access(b.sessionDir);
+
+    await supprimerSession(a.id);
+    await assert.rejects(() => access(a.sessionDir));
+    assert.equal((await readdir(join(tmpDir, '_corbeille'))).length, 1);
+
+    await assert.rejects(() => supprimerSession('../x'), ErreurSession);
+  } finally {
+    CONFIG.SESSIONS_DIR = original;
+    await rm(tmpDir, { recursive: true, force: true });
+  }
+});

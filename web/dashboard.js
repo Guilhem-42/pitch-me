@@ -1,3 +1,10 @@
+let graphiques = [];
+
+function detruireGraphiques() {
+  graphiques.forEach(g => g.destroy());
+  graphiques = [];
+}
+
 // Chargement des sessions
 async function chargerSessions() {
   const response = await fetch('/api/sessions');
@@ -6,8 +13,9 @@ async function chargerSessions() {
   const select = document.getElementById('session-select');
   select.innerHTML = '<option value="">Sélectionner une session</option>';
 
+  // Les ids (AAAA-MM-JJ-sNN) sont chronologiques : tri inverse, plus récente en haut.
   sessions
-    .sort((a, b) => new Date(b.debut || 0) - new Date(a.debut || 0))
+    .sort((a, b) => b.id.localeCompare(a.id))
     .forEach(session => {
       const option = document.createElement('option');
       option.value = session.id;
@@ -15,10 +23,14 @@ async function chargerSessions() {
       select.appendChild(option);
     });
 
-  // Charger la première session par défaut
-  if (sessions.length > 0) {
-    select.value = sessions[0].id;
-    chargerSession(sessions[0].id);
+  // Session demandée dans l'URL (?session=ID) sinon la plus récente
+  const demandee = new URLSearchParams(location.search).get('session');
+  const choisie = sessions.find(x => x.id === demandee) || sessions[0];
+  if (choisie) {
+    select.value = choisie.id;
+    chargerSession(choisie.id);
+  } else {
+    document.getElementById('content').innerHTML = '<div class="section"><p>Aucune session.</p></div>';
   }
 }
 
@@ -36,6 +48,7 @@ async function chargerSession(id) {
 
 // Affichage du dashboard
 function afficherDashboard(data) {
+  detruireGraphiques();
   const { manifest, timeline, report } = data;
 
   if (!timeline || !report) {
@@ -92,12 +105,12 @@ function afficherDashboard(data) {
 
     <div class="section">
       <h2>Frise temporelle</h2>
-      <canvas id="timeline-chart" class="timeline-chart"></canvas>
+      <div class="chart-box" style="height:220px"><canvas id="timeline-chart"></canvas></div>
     </div>
 
     <div class="section">
       <h2>Temps par application</h2>
-      <canvas id="apps-chart" style="height: 300px;"></canvas>
+      <div class="chart-box" style="height:300px"><canvas id="apps-chart"></canvas></div>
     </div>
 
     ${report.constats.length > 0 ? `
@@ -220,13 +233,14 @@ function creerGraphiqueFrise(timeline) {
     barThickness: 30
   }));
 
-  new Chart(canvas, {
+  graphiques.push(new Chart(canvas, {
     type: 'bar',
     data: { datasets },
     options: {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
+      animation: false,
       scales: {
         x: {
           type: 'linear',
@@ -255,7 +269,7 @@ function creerGraphiqueFrise(timeline) {
         }
       }
     }
-  });
+  }));
 }
 
 // Graphique du temps par app
@@ -270,7 +284,7 @@ function creerGraphiqueApps(timeline) {
     'Slack': '#e01e5a'
   };
 
-  new Chart(canvas, {
+  graphiques.push(new Chart(canvas, {
     type: 'bar',
     data: {
       labels: timeline.temps_par_app.map(t => t.app),
@@ -286,6 +300,7 @@ function creerGraphiqueApps(timeline) {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
+      animation: false,
       plugins: {
         legend: {
           display: false
@@ -300,13 +315,37 @@ function creerGraphiqueApps(timeline) {
         }
       }
     }
-  });
+  }));
 }
 
 // Scroll vers un timestamp (TODO: améliorer)
 function scrollToTimestamp(ts) {
   alert(`Timestamp: ${ts}s`);
 }
+
+// Suppression : la session est déplacée dans sessions/_corbeille (récupérable)
+async function supprimerSessionCourante() {
+  const select = document.getElementById('session-select');
+  const id = select.value;
+  if (!id) return;
+  if (!confirm(`Supprimer la session ${id} ?\nElle sera déplacée dans sessions/_corbeille.`)) return;
+  try {
+    const { token } = await (await fetch('/api/token')).json();
+    const r = await fetch(`/api/session/${id}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+    });
+    const corps = await r.json();
+    if (!r.ok) throw new Error(corps.error || 'Échec');
+    history.replaceState(null, '', location.pathname);
+    detruireGraphiques();
+    await chargerSessions();
+  } catch (err) {
+    alert(`Suppression impossible : ${err.message}`);
+  }
+}
+
+document.getElementById('btn-supprimer').addEventListener('click', supprimerSessionCourante);
 
 // Initialisation
 document.getElementById('session-select').addEventListener('change', (e) => {
