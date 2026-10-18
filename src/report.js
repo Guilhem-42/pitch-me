@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ReportSchema } from './schemas.js';
+import { validerPreuves, validerComparaison } from './preuves.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -93,50 +94,6 @@ function construirePromptUtilisateur(manifest, timeline, rapportPrecedent, timel
 }
 
 /**
- * Valide les preuves dans le rapport
- * @param {Object} rapport - Rapport à valider
- * @param {Object} timeline - Timeline de référence
- * @returns {Array<string>} Liste des erreurs de preuve
- */
-function validerPreuves(rapport, timeline) {
-  const erreurs = [];
-
-  for (const constat of rapport.constats) {
-    const { source, t_s } = constat.preuve;
-
-    // Vérifier que la source existe dans timeline
-    if (!timeline[source]) {
-      erreurs.push(`Preuve invalide pour "${constat.titre}": la source "${source}" n'existe pas dans timeline.json`);
-      continue;
-    }
-
-    // Vérifier que le timestamp existe dans la source
-    const sourceData = timeline[source];
-    let found = false;
-
-    if (Array.isArray(sourceData)) {
-      // Chercher dans le tableau
-      for (const item of sourceData) {
-        // Vérifier les champs possibles de timestamp
-        if (item.t_s === t_s || item.debut_s === t_s || Math.abs(item.debut_s - t_s) < 5) {
-          found = true;
-          break;
-        }
-      }
-    } else if (typeof sourceData === 'object' && sourceData !== null) {
-      // Pour les objets simples, vérifier si t_s est cohérent
-      found = true;
-    }
-
-    if (!found) {
-      erreurs.push(`Preuve invalide pour "${constat.titre}": aucune entrée trouvée dans "${source}" à t_s=${t_s}`);
-    }
-  }
-
-  return erreurs;
-}
-
-/**
  * Appelle le LLM pour générer le rapport
  * @param {Object} manifest - Manifeste de session
  * @param {Object} timeline - Timeline calculée
@@ -194,7 +151,10 @@ export async function genererRapport(manifest, timeline, sessionsDir, apiKey, mo
       const validated = ReportSchema.parse(rapport);
 
       // Valider les preuves
-      const erreursPreuves = validerPreuves(validated, timeline);
+      const erreursPreuves = [
+        ...validerPreuves(validated, timeline),
+        ...validerComparaison(validated, timeline, timelinePrecedente)
+      ];
       if (erreursPreuves.length > 0) {
         if (tentative < maxTentatives) {
           // Relancer avec les erreurs

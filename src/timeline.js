@@ -107,6 +107,8 @@ function identifierHorsCadre(fenetres, fenetresPrevues) {
     .map(f => ({
       app: f.app,
       fenetre: f.fenetre,
+      debut_s: f.debut_s,
+      fin_s: f.fin_s,
       duree_s: Math.round(f.duree_s)
     }));
 }

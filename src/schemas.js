@@ -59,6 +59,8 @@ export const TempsParAppSchema = z.object({
 export const HorsCadreSchema = z.object({
   app: z.string(),
   fenetre: z.string(),
+  debut_s: z.number(),
+  fin_s: z.number(),
   duree_s: z.number()
 });
 
