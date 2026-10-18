@@ -4,6 +4,7 @@ import { join, extname, resolve, sep } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import {
   creerSession,
+  dupliquerSession,
   demarrer,
   pret,
   repere,
@@ -173,6 +174,30 @@ export function demarrerServeur(port, webDir, sessionsDir) {
 
         try {
           const { manifest } = await creerSession(body.titre);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(manifest));
+        } catch (err) {
+          const status = err instanceof ErreurSession ? 400 : 500;
+          res.writeHead(status, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message, code: err.code }));
+        }
+        return;
+      }
+
+      // Route: POST /api/session/:id/dupliquer - Dupliquer une session
+      const matchDupliquer = path.match(/^\/api\/session\/([A-Za-z0-9_-]+)\/dupliquer$/);
+      if (matchDupliquer && req.method === 'POST') {
+        const erreur = validerRequeteEcriture(req, jeton);
+        if (erreur) {
+          res.writeHead(erreur.status, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: erreur.message }));
+          return;
+        }
+
+        const idSource = matchDupliquer[1];
+
+        try {
+          const { manifest } = await dupliquerSession(idSource);
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify(manifest));
         } catch (err) {

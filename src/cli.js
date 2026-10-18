@@ -30,7 +30,7 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const COMMANDES = ['new', 'start', 'ready', 'mark', 'stop', 'report', 'serve', 'next'];
+const COMMANDES = ['new', 'start', 'ready', 'mark', 'stop', 'report', 'serve', 'next', 'dupliquer'];
 
 /**
  * Affiche l'aide
@@ -45,9 +45,10 @@ Commandes:
   ready <id>               Pose le repère "prêt" (début du live)
   mark <id> <type> [texte] Pose un repère
   stop <id>                Arrête la capture
-  report <id>              Calcule la timeline et produit le rapport (TODO)
-  serve                    Sert le dashboard (TODO)
-  next <id>                Crée la session suivante (TODO)
+  report <id>              Calcule la timeline et produit le rapport
+  serve                    Sert le dashboard
+  next <id>                Crée la session suivante
+  dupliquer <id>           Duplique une session (depuis n'importe quel statut)
 
 Types de repères: pret, blocage, ok, note
   `);
@@ -415,6 +416,60 @@ async function commandeNext(args) {
 }
 
 /**
+ * Commande: dupliquer <id>
+ */
+async function commandeDupliquer(args) {
+  if (args.length === 0) {
+    console.error('Erreur: ID de session manquant');
+    console.log('Usage: dupliquer <id>');
+    process.exit(1);
+  }
+
+  const idSource = args[0];
+  const sessionDirSource = join(CONFIG.SESSIONS_DIR, idSource);
+
+  // Lire le manifeste source
+  const manifestSource = await lireManifeste(sessionDirSource);
+
+  // Créer la copie
+  const titre = `${manifestSource.titre} (copie)`;
+  const id = await genererIdSession(CONFIG.SESSIONS_DIR);
+  const sessionDir = join(CONFIG.SESSIONS_DIR, id);
+
+  await creerDossierSession(sessionDir);
+  await creerDossierSession(join(sessionDir, 'screenpipe'));
+
+  // Créer le manifeste en copiant les champs appropriés
+  const manifest = {
+    ...creerManifeste(id, titre),
+    objectif: manifestSource.objectif,
+    criteres: manifestSource.criteres,
+    duree_cible_s: manifestSource.duree_cible_s,
+    fenetres_prevues: manifestSource.fenetres_prevues,
+    audio: manifestSource.audio,
+    session_precedente: manifestSource.session_precedente,
+    guide: manifestSource.guide,
+    contexte: manifestSource.contexte ? {
+      ...manifestSource.contexte,
+      date_prevue: null
+    } : null,
+    // Checklist avec tous les rappels décochés
+    checklist: manifestSource.checklist.map(item => ({
+      ...item,
+      fait: false
+    }))
+  };
+
+  await ecrireManifeste(sessionDir, manifest);
+
+  console.log(`✅ Session dupliquée: ${id}`);
+  console.log(`📁 Dossier: ${sessionDir}`);
+  console.log(`🔗 Session source: ${idSource}`);
+  console.log(`\n📝 Checklist copiée (${manifest.checklist.length} rappels, tous décochés)`);
+  console.log(`\n⏭️  Prochaine étape: node src/cli.js start ${id}`);
+}
+
+/**
  * Point d'entrée
  */
 async function main() {
@@ -459,6 +514,9 @@ async function main() {
         break;
       case 'next':
         await commandeNext(commandeArgs);
+        break;
+      case 'dupliquer':
+        await commandeDupliquer(commandeArgs);
         break;
     }
   } catch (err) {

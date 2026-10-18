@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import {
   creerSession,
+  dupliquerSession,
   demarrer,
   pret,
   repere,
@@ -211,4 +212,102 @@ test('majGuide refuse un identifiant piégé sans rien lire', async () => {
     () => majGuide('../../etc', { points: [], rappels_fin: [], alerte_fin_s: 10 }),
     err => err instanceof ErreurSession && err.code === ERREUR.INTROUVABLE
   );
+});
+
+test('dupliquerSession copie les champs appropriés', async () => {
+  const tmpDir = await mkdtemp(join(tmpdir(), 'test-session-'));
+  const originalSessionsDir = CONFIG.SESSIONS_DIR;
+  CONFIG.SESSIONS_DIR = tmpDir;
+
+  try {
+    // Créer une session source avec tous les champs
+    const { id: idSource, sessionDir } = await creerSession('Session originale');
+    const manifestPath = join(sessionDir, 'manifest.json');
+    const manifestSource = JSON.parse(await readFile(manifestPath, 'utf-8'));
+
+    manifestSource.objectif = 'Objectif test';
+    manifestSource.criteres = ['Critère 1', 'Critère 2'];
+    manifestSource.duree_cible_s = 600;
+    manifestSource.fenetres_prevues = [{ app: 'Firefox', motif: 'supports et pages web' }];
+    manifestSource.audio = false;
+    manifestSource.session_precedente = 'session-precedente';
+    manifestSource.guide = { points: [], rappels_fin: [], alerte_fin_s: 10 };
+    manifestSource.checklist = [
+      { id: 'prep-1', texte: 'Rappel 1', fait: true },
+      { id: 'prep-2', texte: 'Rappel 2', fait: false }
+    ];
+    manifestSource.reperes = [{ t: new Date().toISOString(), type: 'note', texte: 'Test' }];
+    manifestSource.statut = 'termine';
+
+    await writeFile(manifestPath, JSON.stringify(manifestSource, null, 2));
+
+    // Dupliquer la session
+    const result = await dupliquerSession(idSource);
+
+    assert.ok(result.id);
+    assert.notEqual(result.id, idSource);
+    assert.equal(result.manifest.titre, 'Session originale (copie)');
+    assert.equal(result.manifest.statut, 'preparation');
+
+    // Champs copiés
+    assert.equal(result.manifest.objectif, 'Objectif test');
+    assert.deepEqual(result.manifest.criteres, ['Critère 1', 'Critère 2']);
+    assert.equal(result.manifest.duree_cible_s, 600);
+    assert.deepEqual(result.manifest.fenetres_prevues, [{ app: 'Firefox', motif: 'supports et pages web' }]);
+    assert.equal(result.manifest.audio, false);
+    assert.equal(result.manifest.session_precedente, 'session-precedente');
+    assert.deepEqual(result.manifest.guide, { points: [], rappels_fin: [], alerte_fin_s: 10 });
+
+    // Checklist copiée avec rappels décochés
+    assert.equal(result.manifest.checklist.length, 2);
+    assert.equal(result.manifest.checklist[0].id, 'prep-1');
+    assert.equal(result.manifest.checklist[0].fait, false);
+    assert.equal(result.manifest.checklist[1].fait, false);
+
+    // Champs non copiés
+    assert.equal(result.manifest.reperes.length, 0);
+    assert.equal(result.manifest.debut, null);
+    assert.equal(result.manifest.pret, null);
+    assert.equal(result.manifest.fin, null);
+  } finally {
+    CONFIG.SESSIONS_DIR = originalSessionsDir;
+    await rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('dupliquerSession fonctionne depuis n\'importe quel statut', async () => {
+  const tmpDir = await mkdtemp(join(tmpdir(), 'test-session-'));
+  const originalSessionsDir = CONFIG.SESSIONS_DIR;
+  CONFIG.SESSIONS_DIR = tmpDir;
+
+  try {
+    // Créer une session en préparation
+    const { id: idPrep } = await creerSession('Session prep');
+    const resultPrep = await dupliquerSession(idPrep);
+    assert.ok(resultPrep.id);
+    assert.equal(resultPrep.manifest.statut, 'preparation');
+  } finally {
+    CONFIG.SESSIONS_DIR = originalSessionsDir;
+    await rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('dupliquerSession ne touche jamais la session source', async () => {
+  const tmpDir = await mkdtemp(join(tmpdir(), 'test-session-'));
+  const originalSessionsDir = CONFIG.SESSIONS_DIR;
+  CONFIG.SESSIONS_DIR = tmpDir;
+
+  try {
+    const { id: idSource, sessionDir } = await creerSession('Session source');
+    const manifestPath = join(sessionDir, 'manifest.json');
+    const manifestSourceAvant = await readFile(manifestPath, 'utf-8');
+
+    await dupliquerSession(idSource);
+
+    const manifestSourceApres = await readFile(manifestPath, 'utf-8');
+    assert.equal(manifestSourceAvant, manifestSourceApres);
+  } finally {
+    CONFIG.SESSIONS_DIR = originalSessionsDir;
+    await rm(tmpDir, { recursive: true, force: true });
+  }
 });

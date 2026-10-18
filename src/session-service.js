@@ -71,6 +71,49 @@ export async function creerSession(titre) {
 }
 
 /**
+ * Duplique une session existante
+ * @param {string} idSource - ID de la session à dupliquer
+ * @returns {Promise<Object>} Nouvelle session créée
+ */
+export async function dupliquerSession(idSource) {
+  const sessionDirSource = dossierSession(idSource);
+  const manifestSource = await lireManifeste(sessionDirSource);
+
+  // Créer la nouvelle session
+  const titre = `${manifestSource.titre} (copie)`;
+  const id = await genererIdSession(CONFIG.SESSIONS_DIR);
+  const sessionDir = dossierSession(id);
+
+  await creerDossierSession(sessionDir);
+  await creerDossierSession(join(sessionDir, 'screenpipe'));
+
+  // Créer le manifeste en copiant les champs appropriés
+  const manifest = {
+    ...creerManifeste(id, titre),
+    objectif: manifestSource.objectif,
+    criteres: manifestSource.criteres,
+    duree_cible_s: manifestSource.duree_cible_s,
+    fenetres_prevues: manifestSource.fenetres_prevues,
+    audio: manifestSource.audio,
+    session_precedente: manifestSource.session_precedente,
+    guide: manifestSource.guide,
+    contexte: manifestSource.contexte ? {
+      ...manifestSource.contexte,
+      date_prevue: null
+    } : null,
+    // Checklist avec tous les rappels décochés
+    checklist: manifestSource.checklist.map(item => ({
+      ...item,
+      fait: false
+    }))
+  };
+
+  await ecrireManifeste(sessionDir, manifest);
+
+  return { id, sessionDir, manifest };
+}
+
+/**
  * Met à jour le champ contexte du manifeste
  * @param {string} id - ID de session
  * @param {Object} contexte - Contexte à écrire
