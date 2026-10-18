@@ -51,6 +51,14 @@ Produis un rapport JSON structuré qui :
   }
   ```
 
+### Plan réalisé
+
+- Si `timeline.json` contient un champ `plan_realise`, commente l'écart entre le timing prévu (`t_cible_s`) et réel (`t_reel_s`) pour chaque point
+- Les valeurs `t_cible_s` et `t_reel_s` sont **lues** dans `plan_realise`, jamais calculées
+- Si `t_reel_s` est `null`, le point n'a pas été fait : signale-le comme un constat de gravité "attention" si le point était important, "info" sinon
+- Si l'écart (t_reel_s - t_cible_s) est significatif (> 30s), signale-le comme un constat avec la preuve `"plan_realise"` et `t_s: t_reel_s`
+- Exemple : si un point "Démo" était prévu à 120s et fait à 250s, tu écris un constat "Point 'Démo' fait avec 130 secondes de retard" avec preuve `{source: "plan_realise", t_s: 250}`
+
 ### TODOs détectés
 
 - Lis les `extraits_texte` de timeline.json et le manifeste.

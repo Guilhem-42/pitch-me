@@ -217,6 +217,34 @@ function extraireReperes(reperes, debut) {
 }
 
 /**
+ * Calcule le plan réalisé à partir du guide et des repères
+ * @param {Object|null} guide - Guide du manifeste
+ * @param {Array} reperes - Repères avec décalage depuis début
+ * @returns {Array|undefined} Plan réalisé ou undefined
+ */
+function calculerPlanRealise(guide, reperes) {
+  if (!guide || !guide.points || guide.points.length === 0) {
+    return undefined;
+  }
+
+  // Map des repères de type 'point' : id -> t_s
+  const reperesToMap = new Map();
+  reperes.forEach(r => {
+    if (r.type === 'point') {
+      reperesToMap.set(r.texte, r.t_s);
+    }
+  });
+
+  // Construire le plan réalisé
+  return guide.points.map(point => ({
+    id: point.id,
+    titre: point.titre,
+    t_cible_s: point.t_cible_s,
+    t_reel_s: reperesToMap.has(point.id) ? reperesToMap.get(point.id) : null
+  }));
+}
+
+/**
  * Extrait le texte à l'écran (limité)
  * @param {Array} frames - Frames
  * @param {string} debut - Timestamp de début
@@ -293,6 +321,8 @@ export function calculerTimeline(manifest, donnees) {
   const changements_fenetre = fenetres.length - 1;
   const hors_cadre = identifierHorsCadre(fenetres, fenetres_prevues);
 
+  const reperesConverts = extraireReperes(reperes, debut);
+
   const timeline = {
     session_id: manifest.id,
     debut,
@@ -305,7 +335,7 @@ export function calculerTimeline(manifest, donnees) {
     temps_par_app,
     changements_fenetre,
     hors_cadre,
-    reperes: extraireReperes(reperes, debut),
+    reperes: reperesConverts,
     extraits_texte: extraireTexte(frames, debut)
   };
 
@@ -313,6 +343,12 @@ export function calculerTimeline(manifest, donnees) {
   if (manifest.audio && audio.length > 0) {
     timeline.silences = detecterSilences(audio, debut, pret);
     timeline.parole = calculerParole(audio, debut, pret, fin);
+  }
+
+  // Ajouter le plan réalisé si guide présent
+  const planRealise = calculerPlanRealise(manifest.guide, reperesConverts);
+  if (planRealise !== undefined) {
+    timeline.plan_realise = planRealise;
   }
 
   // Valider le schéma avant de retourner

@@ -162,4 +162,74 @@ describe('calculerTimeline', () => {
       assert.ok(!extrait.texte.includes('Panneau de contrôle'));
     }
   });
+
+  test('calcule plan_realise si guide présent', async () => {
+    const manifest = await chargerFixture('manifest-session1.json');
+    const donnees = await chargerFixture('donnees-session1.json');
+
+    // Ajouter un guide au manifeste
+    manifest.guide = {
+      points: [
+        { id: 'intro', titre: 'Introduction', t_cible_s: 30, important: false },
+        { id: 'demo', titre: 'Démo', t_cible_s: 120, important: false },
+        { id: 'conclu', titre: 'Conclusion', t_cible_s: 240, important: false }
+      ],
+      rappels_fin: ['Merci !'],
+      alerte_fin_s: 10
+    };
+
+    // Ajouter des repères de type 'point'
+    manifest.reperes.push(
+      { t: '2026-10-18T14:02:40Z', type: 'point', texte: 'intro' },
+      { t: '2026-10-18T14:04:10Z', type: 'point', texte: 'demo' }
+    );
+
+    const timeline = calculerTimeline(manifest, donnees);
+
+    assert.ok(timeline.plan_realise);
+    assert.equal(timeline.plan_realise.length, 3);
+
+    // Vérifier la structure
+    assert.equal(timeline.plan_realise[0].id, 'intro');
+    assert.equal(timeline.plan_realise[0].titre, 'Introduction');
+    assert.equal(timeline.plan_realise[0].t_cible_s, 30);
+    assert.ok(typeof timeline.plan_realise[0].t_reel_s === 'number');
+
+    // 'intro' fait à 2:40 = 160s depuis debut
+    assert.equal(timeline.plan_realise[0].t_reel_s, 160);
+
+    // 'demo' fait à 4:10 = 250s depuis debut
+    assert.equal(timeline.plan_realise[1].t_reel_s, 250);
+
+    // 'conclu' pas fait
+    assert.equal(timeline.plan_realise[2].t_reel_s, null);
+  });
+
+  test('pas de plan_realise si pas de guide', async () => {
+    const manifest = await chargerFixture('manifest-session1.json');
+    const donnees = await chargerFixture('donnees-session1.json');
+
+    // Pas de guide
+    manifest.guide = null;
+
+    const timeline = calculerTimeline(manifest, donnees);
+
+    assert.equal(timeline.plan_realise, undefined);
+  });
+
+  test('pas de plan_realise si guide sans points', async () => {
+    const manifest = await chargerFixture('manifest-session1.json');
+    const donnees = await chargerFixture('donnees-session1.json');
+
+    // Guide sans points
+    manifest.guide = {
+      points: [],
+      rappels_fin: [],
+      alerte_fin_s: 10
+    };
+
+    const timeline = calculerTimeline(manifest, donnees);
+
+    assert.equal(timeline.plan_realise, undefined);
+  });
 });

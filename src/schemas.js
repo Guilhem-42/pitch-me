@@ -101,6 +101,14 @@ export const ExtraitTexteSchema = z.object({
   texte: z.string().max(300)
 });
 
+// Schéma pour un point du plan réalisé
+export const PointRealiseSchema = z.object({
+  id: z.string(),
+  titre: z.string(),
+  t_cible_s: z.number().nonnegative(),
+  t_reel_s: z.number().nonnegative().nullable()
+});
+
 // Schéma pour la timeline
 export const TimelineSchema = z.object({
   session_id: z.string(),
@@ -121,7 +129,8 @@ export const TimelineSchema = z.object({
     type: z.string(),
     texte: z.string()
   })),
-  extraits_texte: z.array(ExtraitTexteSchema).max(40)
+  extraits_texte: z.array(ExtraitTexteSchema).max(40),
+  plan_realise: z.array(PointRealiseSchema).optional()
 });
 
 // Schéma pour les preuves dans le rapport
