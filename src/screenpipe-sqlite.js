@@ -1,9 +1,17 @@
 import { DatabaseSync } from 'node:sqlite';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
  * Récupère les données d'une session directement depuis SQLite
- * (lecture seule, sans relancer Screenpipe)
+ * (lecture seule, sans relancer Screenpipe).
+ *
+ * Schéma réel de Screenpipe : `frames` (timestamp, app_name, window_name,
+ * full_text pour l'OCR, accessibility_text en repli) et
+ * `audio_transcriptions` (timestamp, transcription). Les horodatages sont au
+ * format `2026-10-18T06:07:09.526123+00:00` : on les compare en dates, pas en
+ * texte, avec une marge d'une seconde côté SQL puis un filtre exact en JS.
+ *
  * @param {string} sessionDir - Chemin vers le dossier de session
  * @param {string} debut - Début (ISO 8601)
  * @param {string} fin - Fin (ISO 8601)
@@ -11,50 +19,61 @@ import { join } from 'node:path';
  */
 export async function recupererDonneesDepuisSqlite(sessionDir, debut, fin) {
   const dbPath = join(sessionDir, 'screenpipe', 'db.sqlite');
+  if (!existsSync(dbPath)) {
+    throw new Error(`Base Screenpipe introuvable : ${dbPath}`);
+  }
 
-  // Ouvrir en lecture seule
+  const debutMs = Date.parse(debut);
+  const finMs = Date.parse(fin);
+  const dansLaPlage = ts => {
+    const t = Date.parse(ts);
+    return t >= debutMs && t <= finMs;
+  };
+
   const db = new DatabaseSync(dbPath, { readOnly: true });
 
   try {
-    // Frames (OCR)
-    const framesStmt = db.prepare(`
+    const framesRows = db.prepare(`
       SELECT
         timestamp,
         app_name,
         window_name,
-        text
+        COALESCE(NULLIF(full_text, ''), NULLIF(accessibility_text, ''), '') AS text
       FROM frames
-      WHERE timestamp >= ? AND timestamp <= ?
+      WHERE julianday(timestamp) >= julianday(?) - 1.0 / 86400
+        AND julianday(timestamp) <= julianday(?) + 1.0 / 86400
       ORDER BY timestamp ASC
-    `);
+    `).all(debut, fin);
 
-    const framesRows = framesStmt.all(debut, fin);
-    const frames = framesRows.map(row => ({
-      content: {
-        timestamp: row.timestamp,
-        app_name: row.app_name,
-        window_name: row.window_name,
-        text: row.text || ''
-      }
-    }));
+    const frames = framesRows
+      .filter(row => dansLaPlage(row.timestamp))
+      .map(row => ({
+        content: {
+          timestamp: row.timestamp,
+          app_name: row.app_name,
+          window_name: row.window_name,
+          text: row.text || ''
+        }
+      }));
 
-    // Audio (transcriptions)
-    const audioStmt = db.prepare(`
+    const audioRows = db.prepare(`
       SELECT
         timestamp,
         transcription
       FROM audio_transcriptions
-      WHERE timestamp >= ? AND timestamp <= ?
+      WHERE julianday(timestamp) >= julianday(?) - 1.0 / 86400
+        AND julianday(timestamp) <= julianday(?) + 1.0 / 86400
       ORDER BY timestamp ASC
-    `);
+    `).all(debut, fin);
 
-    const audioRows = audioStmt.all(debut, fin);
-    const audio = audioRows.map(row => ({
-      content: {
-        timestamp: row.timestamp,
-        transcription: row.transcription || ''
-      }
-    }));
+    const audio = audioRows
+      .filter(row => dansLaPlage(row.timestamp))
+      .map(row => ({
+        content: {
+          timestamp: row.timestamp,
+          transcription: row.transcription || ''
+        }
+      }));
 
     return { frames, audio };
   } finally {
