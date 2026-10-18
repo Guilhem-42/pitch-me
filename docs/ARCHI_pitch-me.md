@@ -38,16 +38,15 @@ l'historique Screenpipe, puis le LLM produit le bilan.
 `/search` (filtres `start_time`, `end_time`, `content_type`, `app_name`,
 `window_name`), `/raw_sql` (lecture seule), `/activity-summary`,
 `/frames/{id}/context`, `/elements`, `/health`. Authentification : en-tête
-`Authorization: Bearer <clé>` plus `X-Screenpipe-Client: api`. Clé obtenue avec
-`npx -y screenpipe@latest auth token`.
+`Authorization: Bearer <clé>` plus `X-Screenpipe-Client: api`. La clé d'API est
+**commune à toutes les instances** Screenpipe (obtenue avec `npx -y screenpipe@latest auth token`).
 
-## Points à valider
+## Points validés
 
-1. Instance Screenpipe existante (plage horaire seulement) ou instance dédiée
-   par session (démarrage et arrêt réels).
-2. Noms exacts des colonnes de la base (`.schema`) avant d'écrire les requêtes.
-3. Qualité de la transcription et des locuteurs sur l'audio mixé en visio.
-4. La clé d'API change-t-elle avec un dossier de données séparé ?
+1. ✅ Instance Screenpipe dédiée par session (décision validée dans DECISIONS.md).
+2. ✅ La clé d'API est commune à toutes les instances Screenpipe.
+3. Noms exacts des colonnes de la base (`.schema`) avant d'écrire les requêtes.
+4. Qualité de la transcription et des locuteurs sur l'audio mixé en visio.
 5. Les « hésitations » sont une interprétation : à présenter comme indice.
 
 ## Révisions

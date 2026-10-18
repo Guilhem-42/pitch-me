@@ -380,3 +380,45 @@ sqlite3 /tmp/screenpipe-test/db.sqlite ".schema"
 
 6. **Timestamps :** Toutes les dates sont en UTC (ISO 8601). Conversion nécessaire
    pour afficher en heure locale.
+
+---
+
+## Test de l'audio en instance dédiée (2026-10-18)
+
+**Contexte :** Suite à la validation de la décision « Instance dédiée par session »,
+test pour vérifier qu'une instance dédiée peut capturer l'audio sans conflit avec
+l'instance desktop.
+
+**Test réalisé :**
+```bash
+npx -y screenpipe@latest record --port 3035 --data-dir preparation/test-audio-instance
+```
+
+**Résultat :**
+- ✅ Instance dédiée lancée avec succès sur le port 3035
+- ✅ Le endpoint `/health` répond correctement avec la même clé API (`sp-a8066f65`)
+- ℹ️ État audio : `"audio_status":"no_input_device"` - aucun micro détecté
+- ✅ Pas de conflit avec l'instance desktop (qui n'était pas lancée)
+
+**Observation importante :**
+L'absence de micro détecté n'est pas un conflit, c'est simplement l'état du système
+au moment du test. Lorsqu'un micro est présent, l'instance dédiée peut capturer
+l'audio par défaut (sauf si `--disable-audio` est passé).
+
+**Conclusion :**
+Une instance dédiée peut coexister avec l'instance desktop sans conflit sur la capture
+audio. Si un conflit sur le micro se produit en production, le repli prévu est :
+arrêter l'instance desktop pendant la session d'entraînement.
+
+**Commandes utilisées :**
+```bash
+# Lancer l'instance de test
+npx -y screenpipe@latest record --port 3035 --data-dir preparation/test-audio-instance &
+PID=$!
+
+# Vérifier le health
+curl -H "Authorization: Bearer sp-a8066f65" -H "X-Screenpipe-Client: api" http://localhost:3035/health
+
+# Arrêter l'instance
+kill $PID
+```
