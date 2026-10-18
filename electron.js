@@ -7,33 +7,41 @@ import { CONFIG } from './src/config.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const PORT = 3000;
+const PORT_DEBUT = 3000;
+const NB_PORTS = 10;
+
+let port = PORT_DEBUT;
 
 let win = null;
 let serveur = null;
 let creation = false;
 
-/**
- * Détecte un serveur Pitch-Me déjà actif sur le port (ex. `serve` lancé avant).
- * Dans ce cas la coque le réutilise au lieu d'en démarrer un second.
- */
-async function serveurDejaActif() {
-  try {
-    const rep = await fetch(`http://127.0.0.1:${PORT}/api/token`, {
-      signal: AbortSignal.timeout(1000)
-    });
-    return rep.ok;
-  } catch {
-    return false;
-  }
-}
-
-function demarrerServeurLocal() {
+function demarrerServeurSur(portCible) {
   return new Promise((resolve, reject) => {
-    const { server } = demarrerServeur(PORT, join(__dirname, 'web'), CONFIG.SESSIONS_DIR);
+    const { server } = demarrerServeur(portCible, join(__dirname, 'web'), CONFIG.SESSIONS_DIR);
     server.once('error', reject);
     server.once('listening', () => resolve(server));
   });
+}
+
+/**
+ * Démarre toujours son propre serveur, sur le premier port libre à partir de
+ * 3000. On ne réutilise jamais un serveur déjà actif : il pourrait tourner avec
+ * un code plus ancien que celui du dépôt (routes manquantes).
+ */
+async function demarrerServeurLibre() {
+  for (let p = PORT_DEBUT; p < PORT_DEBUT + NB_PORTS; p++) {
+    try {
+      serveur = await demarrerServeurSur(p);
+      port = p;
+      return;
+    } catch (err) {
+      if (err.code !== 'EADDRINUSE') {
+        throw err;
+      }
+    }
+  }
+  throw new Error(`aucun port libre entre ${PORT_DEBUT} et ${PORT_DEBUT + NB_PORTS - 1}`);
 }
 
 async function creerFenetre() {
@@ -43,18 +51,12 @@ async function creerFenetre() {
   creation = true;
 
   try {
-    if (!(await serveurDejaActif())) {
-      try {
-        serveur = await demarrerServeurLocal();
-      } catch (err) {
-        dialog.showErrorBox(
-          'Pitch-Me',
-          `Impossible de démarrer le serveur sur le port ${PORT} : ${err.message}\n` +
-          'Un autre programme utilise peut-être ce port.'
-        );
-        app.quit();
-        return;
-      }
+    try {
+      await demarrerServeurLibre();
+    } catch (err) {
+      dialog.showErrorBox('Pitch-Me', `Impossible de démarrer le serveur : ${err.message}`);
+      app.quit();
+      return;
     }
 
     win = new BrowserWindow({
@@ -82,7 +84,7 @@ async function creerFenetre() {
     win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
     win.setAlwaysOnTop(true, 'floating', 1);
 
-    win.loadURL(`http://localhost:${PORT}/controle.html`);
+    win.loadURL(`http://localhost:${port}/controle.html`);
 
     win.on('closed', () => {
       win = null;
