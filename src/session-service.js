@@ -17,7 +17,7 @@ import {
   supprimerPid,
   processusEnVie
 } from './screenpipe-process.js';
-import { recupererDonneesSession } from './screenpipe.js';
+import { recupererDonneesDepuisSqlite } from './screenpipe-sqlite.js';
 import { calculerTimeline } from './timeline.js';
 import { genererRapport } from './report.js';
 
@@ -334,10 +334,6 @@ export async function lancerRapport(id) {
     throw new ErreurSession(ERREUR.CONFIG_MANQUANTE, 'ANTHROPIC_API_KEY ou ANTHROPIC_MODEL manquante');
   }
 
-  if (!CONFIG.SCREENPIPE_API_KEY) {
-    throw new ErreurSession(ERREUR.CONFIG_MANQUANTE, 'SCREENPIPE_API_KEY manquante');
-  }
-
   const sessionDir = dossierSession(id);
   const manifest = await lireManifeste(sessionDir);
 
@@ -345,12 +341,11 @@ export async function lancerRapport(id) {
     throw new ErreurSession(ERREUR.ETAT_INVALIDE, 'La session doit être terminée');
   }
 
-  // Récupérer les données
-  const donnees = await recupererDonneesSession(
+  // Récupérer les données directement depuis SQLite (lecture seule)
+  const donnees = await recupererDonneesDepuisSqlite(
+    sessionDir,
     manifest.debut,
-    manifest.fin,
-    CONFIG.SCREENPIPE_PORT,
-    CONFIG.SCREENPIPE_API_KEY
+    manifest.fin
   );
 
   // Calculer la timeline

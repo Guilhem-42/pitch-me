@@ -19,7 +19,7 @@ import {
   supprimerPid,
   processusEnVie
 } from './screenpipe-process.js';
-import { recupererDonneesSession } from './screenpipe.js';
+import { recupererDonneesDepuisSqlite } from './screenpipe-sqlite.js';
 import { calculerTimeline } from './timeline.js';
 import { genererRapport } from './report.js';
 import { demarrerServeur } from './server.js';
@@ -288,13 +288,11 @@ async function commandeReport(args) {
 
   console.log(`\n📊 Calcul de la timeline pour ${id}...`);
 
-  // Récupérer les données depuis l'API Screenpipe
-  // Note: l'instance dédiée doit toujours tourner pour accéder aux données
-  const donnees = await recupererDonneesSession(
+  // Récupérer les données directement depuis SQLite (lecture seule, sans relancer Screenpipe)
+  const donnees = await recupererDonneesDepuisSqlite(
+    sessionDir,
     manifest.debut,
-    manifest.fin,
-    CONFIG.SCREENPIPE_PORT,
-    CONFIG.SCREENPIPE_API_KEY
+    manifest.fin
   );
 
   console.log(`   - Frames récupérées: ${donnees.frames.length}`);
