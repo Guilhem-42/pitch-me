@@ -24,3 +24,38 @@ conflits. Une branche courte et une PR restent possibles pour un changement
 risqué ou partagé.
 **Conséquences :** à revoir au passage du dépôt en public (protection de
 `main`, revue des PR). `README.md` : la ligne « Branches » est mise à jour.
+
+## 2026-10-18 — Instance Screenpipe dédiée par session (proposée)
+
+**Contexte :** chaque session d'entraînement doit capturer l'écran et
+éventuellement l'audio pendant une durée limitée. Deux approches sont possibles :
+(1) lancer une instance dédiée de Screenpipe avec son propre `data-dir`, ou
+(2) utiliser l'instance existante de l'utilisateur et filtrer les données par
+plage horaire.
+
+**Décision proposée :** une instance dédiée par session.
+
+**Justification :**
+- Isolation complète : chaque session a sa propre base de données, aucun risque
+  de mélange avec les captures personnelles de l'utilisateur.
+- Contrôle du cycle de vie : démarrage et arrêt au moment précis de la session,
+  pas de capture avant ou après.
+- Configuration spécifique : possibilité de désactiver l'audio, sélectionner
+  des écrans, ajuster le FPS, etc., sans affecter l'instance habituelle.
+- Nettoyage facile : supprimer le `data-dir` après analyse pour libérer
+  l'espace disque.
+- Confidentialité renforcée : aucune requête SQL ou API ne peut exposer par
+  erreur des données personnelles hors session.
+
+**Conséquences :**
+- Le wrapper doit gérer le processus enfant : lancer `screenpipe record` avec
+  `child_process.spawn`, écrire le PID dans `sessions/<id>/screenpipe.pid`,
+  attendre `/health`, et arrêter proprement avec SIGTERM.
+- Démarrage plus lent : quelques secondes pour initialiser l'instance (acceptable
+  pour une session cadrée).
+- Gestion des plantages : vérifier que le processus tourne, redémarrer ou
+  signaler l'échec si nécessaire.
+- Espace disque temporaire : chaque session crée sa base, mais elle est supprimée
+  après analyse.
+
+**Statut :** Proposée — en attente de validation par un humain de l'équipe.
