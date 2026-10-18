@@ -195,11 +195,12 @@ describe('calculerTimeline', () => {
     assert.equal(timeline.plan_realise[0].t_cible_s, 30);
     assert.ok(typeof timeline.plan_realise[0].t_reel_s === 'number');
 
-    // 'intro' fait à 2:40 = 160s depuis debut
-    assert.equal(timeline.plan_realise[0].t_reel_s, 160);
+    // Les instants réels sont comptés depuis « prêt », comme t_cible_s :
+    // 'intro' validé à 160 s depuis le début de la capture
+    assert.equal(timeline.plan_realise[0].t_reel_s, 160 - timeline.duree_preparation_s);
 
-    // 'demo' fait à 4:10 = 250s depuis debut
-    assert.equal(timeline.plan_realise[1].t_reel_s, 250);
+    // 'demo' validé à 250 s depuis le début de la capture
+    assert.equal(timeline.plan_realise[1].t_reel_s, 250 - timeline.duree_preparation_s);
 
     // 'conclu' pas fait
     assert.equal(timeline.plan_realise[2].t_reel_s, null);

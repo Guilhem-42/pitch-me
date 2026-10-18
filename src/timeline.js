@@ -222,16 +222,18 @@ function extraireReperes(reperes, debut) {
  * @param {Array} reperes - Repères avec décalage depuis début
  * @returns {Array|undefined} Plan réalisé ou undefined
  */
-function calculerPlanRealise(guide, reperes) {
+function calculerPlanRealise(guide, reperes, duree_preparation_s) {
   if (!guide || !guide.points || guide.points.length === 0) {
     return undefined;
   }
 
-  // Map des repères de type 'point' : id -> t_s
+  // Map des repères de type 'point' : id -> instant en secondes depuis « prêt »
+  // (les t_s des repères sont comptés depuis le début de la capture, alors que
+  // t_cible_s du guide est compté depuis « prêt »). Premier repère retenu.
   const reperesToMap = new Map();
   reperes.forEach(r => {
-    if (r.type === 'point') {
-      reperesToMap.set(r.texte, r.t_s);
+    if (r.type === 'point' && !reperesToMap.has(r.texte)) {
+      reperesToMap.set(r.texte, Math.max(0, r.t_s - duree_preparation_s));
     }
   });
 
@@ -346,7 +348,7 @@ export function calculerTimeline(manifest, donnees) {
   }
 
   // Ajouter le plan réalisé si guide présent
-  const planRealise = calculerPlanRealise(manifest.guide, reperesConverts);
+  const planRealise = calculerPlanRealise(manifest.guide, reperesConverts, duree_preparation_s);
   if (planRealise !== undefined) {
     timeline.plan_realise = planRealise;
   }

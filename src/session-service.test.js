@@ -11,7 +11,9 @@ import {
   arreter,
   etat,
   ErreurSession,
-  ERREUR
+  ERREUR,
+  dossierSession,
+  majGuide
 } from './session-service.js';
 import { CONFIG } from './config.js';
 
@@ -195,4 +197,18 @@ test('arreter refuse si déjà terminée', async () => {
     CONFIG.SESSIONS_DIR = originalSessionsDir;
     await rm(tmpDir, { recursive: true, force: true });
   }
+});
+
+test('dossierSession refuse un identifiant qui sort du dossier des sessions', () => {
+  for (const id of ['../x', '..', 'a/b', 'a\\b', '', '.', undefined, 42]) {
+    assert.throws(() => dossierSession(id), err => err instanceof ErreurSession && err.code === ERREUR.INTROUVABLE);
+  }
+  assert.doesNotThrow(() => dossierSession('2026-10-18-s01'));
+});
+
+test('majGuide refuse un identifiant piégé sans rien lire', async () => {
+  await assert.rejects(
+    () => majGuide('../../etc', { points: [], rappels_fin: [], alerte_fin_s: 10 }),
+    err => err instanceof ErreurSession && err.code === ERREUR.INTROUVABLE
+  );
 });

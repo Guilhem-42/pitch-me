@@ -40,13 +40,26 @@ export const ERREUR = {
 };
 
 /**
+ * Résout le dossier d'une session. Refuse tout identifiant qui n'est pas un
+ * nom de session simple (pas de séparateur ni de « .. »).
+ * @param {string} id - ID de session
+ * @returns {string} Chemin du dossier
+ */
+export function dossierSession(id) {
+  if (typeof id !== 'string' || !/^[A-Za-z0-9_-]+$/.test(id)) {
+    throw new ErreurSession(ERREUR.INTROUVABLE, 'Identifiant de session invalide');
+  }
+  return join(CONFIG.SESSIONS_DIR, id);
+}
+
+/**
  * Crée une nouvelle session
  * @param {string} titre - Titre de la session
  * @returns {Promise<Object>} Session créée avec id, sessionDir, manifest
  */
 export async function creerSession(titre) {
   const id = await genererIdSession(CONFIG.SESSIONS_DIR);
-  const sessionDir = join(CONFIG.SESSIONS_DIR, id);
+  const sessionDir = dossierSession(id);
 
   await creerDossierSession(sessionDir);
   await creerDossierSession(join(sessionDir, 'screenpipe'));
@@ -64,7 +77,7 @@ export async function creerSession(titre) {
  * @returns {Promise<Object>} Manifeste mis à jour
  */
 export async function majFiche(id, contexte) {
-  const sessionDir = join(CONFIG.SESSIONS_DIR, id);
+  const sessionDir = dossierSession(id);
   const manifest = await lireManifeste(sessionDir);
 
   manifest.contexte = contexte;
@@ -80,7 +93,7 @@ export async function majFiche(id, contexte) {
  * @returns {Promise<Object>} Manifeste mis à jour
  */
 export async function majGuide(id, guide) {
-  const sessionDir = join(CONFIG.SESSIONS_DIR, id);
+  const sessionDir = dossierSession(id);
   const manifest = await lireManifeste(sessionDir);
 
   if (manifest.statut !== 'preparation') {
@@ -103,7 +116,7 @@ export async function majGuide(id, guide) {
  * @returns {Promise<Object>} Manifeste mis à jour
  */
 export async function cocherRappel(id, index) {
-  const sessionDir = join(CONFIG.SESSIONS_DIR, id);
+  const sessionDir = dossierSession(id);
   const manifest = await lireManifeste(sessionDir);
 
   if (!manifest.checklist || !manifest.checklist[index]) {
@@ -131,7 +144,7 @@ export async function demarrer(id, consentement = false) {
     throw new ErreurSession(ERREUR.CONFIG_MANQUANTE, 'SCREENPIPE_API_KEY manquante');
   }
 
-  const sessionDir = join(CONFIG.SESSIONS_DIR, id);
+  const sessionDir = dossierSession(id);
   const manifest = await lireManifeste(sessionDir);
 
   if (manifest.statut !== 'preparation') {
@@ -173,7 +186,7 @@ export async function demarrer(id, consentement = false) {
  * @returns {Promise<Object>} Manifeste mis à jour
  */
 export async function pret(id) {
-  const sessionDir = join(CONFIG.SESSIONS_DIR, id);
+  const sessionDir = dossierSession(id);
   const manifest = await lireManifeste(sessionDir);
 
   if (manifest.statut !== 'live' || manifest.pret !== null) {
@@ -202,7 +215,7 @@ export async function repere(id, type, texte = '') {
     throw new ErreurSession(ERREUR.ETAT_INVALIDE, `Type invalide: ${type}`);
   }
 
-  const sessionDir = join(CONFIG.SESSIONS_DIR, id);
+  const sessionDir = dossierSession(id);
   const manifest = await lireManifeste(sessionDir);
 
   const updated = ajouterRepere(manifest, type, texte);
@@ -217,7 +230,7 @@ export async function repere(id, type, texte = '') {
  * @returns {Promise<Object>} Manifeste mis à jour
  */
 export async function arreter(id) {
-  const sessionDir = join(CONFIG.SESSIONS_DIR, id);
+  const sessionDir = dossierSession(id);
   const manifest = await lireManifeste(sessionDir);
 
   if (manifest.statut === 'termine') {
@@ -247,7 +260,7 @@ export async function arreter(id) {
  * @returns {Promise<Object>} État de la session
  */
 export async function etat(id) {
-  const sessionDir = join(CONFIG.SESSIONS_DIR, id);
+  const sessionDir = dossierSession(id);
   const manifest = await lireManifeste(sessionDir);
 
   let pidVivant = false;
@@ -282,7 +295,7 @@ export async function lancerRapport(id) {
     throw new ErreurSession(ERREUR.CONFIG_MANQUANTE, 'SCREENPIPE_API_KEY manquante');
   }
 
-  const sessionDir = join(CONFIG.SESSIONS_DIR, id);
+  const sessionDir = dossierSession(id);
   const manifest = await lireManifeste(sessionDir);
 
   if (manifest.statut !== 'termine') {
@@ -330,7 +343,7 @@ export async function lancerRapport(id) {
  * @returns {Promise<Object>} Nouvelle session créée
  */
 export async function creerSessionSuivante(idPrecedent) {
-  const sessionDirPrecedente = join(CONFIG.SESSIONS_DIR, idPrecedent);
+  const sessionDirPrecedente = dossierSession(idPrecedent);
 
   // Lire le rapport de la session précédente
   let reportPrecedent;
@@ -350,7 +363,7 @@ export async function creerSessionSuivante(idPrecedent) {
 
   // Créer la nouvelle session
   const id = await genererIdSession(CONFIG.SESSIONS_DIR);
-  const sessionDir = join(CONFIG.SESSIONS_DIR, id);
+  const sessionDir = dossierSession(id);
 
   await creerDossierSession(sessionDir);
   await creerDossierSession(join(sessionDir, 'screenpipe'));
