@@ -46,7 +46,7 @@ Celles de `CLAUDE.md`, en particulier :
 - Avant l'enregistrement de l'audio ou de l'écran d'une autre personne, la CLI
   demande une confirmation explicite (voir `start`).
 - Commits : `[portée] type: résumé`, une étape = un ou plusieurs commits.
-- Branches : `main` pour l'instant (stratégie à confirmer dans
+- Branches : commits directement sur `main` (décision dans
   `docs/DECISIONS.md`). Faire `git pull --rebase` avant chaque push.
 
 ## Dossier d'une session

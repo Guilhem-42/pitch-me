@@ -41,7 +41,8 @@ répétition de notre propre pitch, en plusieurs itérations.
 - Commits : `[portée] type: résumé`, en français, à l'infinitif, 72 caractères
   au plus. Types : `feat`, `fix`, `docs`, `refactor`, `test`, `chore`.
   Exemple : `[web] feat: afficher la frise des fenêtres`.
-- Branches : [à confirmer — voir `docs/DECISIONS.md`].
+- Branches : commits directement sur `main`, avec `git pull --rebase` avant chaque
+  push (voir `docs/DECISIONS.md`).
 
 ## Démarrer
 
