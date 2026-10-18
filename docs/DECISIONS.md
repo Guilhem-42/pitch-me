@@ -72,3 +72,27 @@ automatique après analyse prévue dans la proposition.
 pas été testé en instance dédiée, ce test ouvre l'étape 1 ; en cas de conflit
 sur le micro, repli : instance dédiée avec audio, instance de l'application
 desktop arrêtée pendant la session.
+
+## 2026-10-18 — Panneau de contrôle web en fenêtre popup (proposée)
+
+**Contexte :** piloter une session depuis le terminal (`start`, `ready`, `mark`,
+`stop`) et éditer le manifeste à la main n'est pas ergonomique pendant une
+présentation. Il faut une fenêtre détachable avec les commandes, les rappels de
+mise en place et une fiche de préparation (navigateur, visio, date, durée).
+**Proposition :** page `web/controle.html` servie par `serve`, ouverte dans une
+fenêtre séparée, qui appelle des routes d'écriture de `server.js`. Le CLI et le
+serveur partagent un même module de service. Détail dans `SPEC_controle.md`.
+**Alternatives écartées :** Electron ou Tauri (toujours au premier plan, mais
+build et dépendances trop lourds pour 48 h), application macOS native,
+extension de navigateur. Limite acceptée : sous Firefox, la fenêtre ne reste pas
+au premier plan.
+**Conséquences :**
+- Les routes d'écriture lancent une capture : jeton par lancement, contrôle du
+  `Host`, `Content-Type` JSON obligatoire, consentement explicite dans le corps
+  de `start`.
+- Le panneau est capturé par Screenpipe : son titre porte un marqueur et
+  `timeline.js` écarte ses frames avant tout calcul.
+- Le manifeste gagne un champ optionnel `contexte`, sans casser les sessions
+  existantes.
+- Livraison par lots A à D ; seul le lot A est indispensable.
+**Statut :** Proposée — en attente de validation par un humain de l'équipe.
