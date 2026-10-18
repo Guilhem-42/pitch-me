@@ -1,0 +1,118 @@
+{
+  "frames": [
+    {
+      "content": {
+        "timestamp": "2026-10-18T14:00:00Z",
+        "app_name": "Visual Studio Code",
+        "window_name": "pitch-me - src/cli.js",
+        "text": "import { config } from './config.js';"
+      }
+    },
+    {
+      "content": {
+        "timestamp": "2026-10-18T14:00:30Z",
+        "app_name": "Visual Studio Code",
+        "window_name": "pitch-me - src/cli.js",
+        "text": "async function main() {"
+      }
+    },
+    {
+      "content": {
+        "timestamp": "2026-10-18T14:02:10Z",
+        "app_name": "Google Chrome",
+        "window_name": "Deck - Slides",
+        "text": "Take — Build Agents That Remember"
+      }
+    },
+    {
+      "content": {
+        "timestamp": "2026-10-18T14:03:00Z",
+        "app_name": "Google Chrome",
+        "window_name": "Deck - Slides",
+        "text": "Le problème"
+      }
+    },
+    {
+      "content": {
+        "timestamp": "2026-10-18T14:03:12Z",
+        "app_name": "Slack",
+        "window_name": "general - Slack",
+        "text": "Hey team, quick question..."
+      }
+    },
+    {
+      "content": {
+        "timestamp": "2026-10-18T14:03:24Z",
+        "app_name": "Google Chrome",
+        "window_name": "Deck - Slides",
+        "text": "Notre solution"
+      }
+    },
+    {
+      "content": {
+        "timestamp": "2026-10-18T14:05:00Z",
+        "app_name": "zoom.us",
+        "window_name": "Zoom Meeting",
+        "text": ""
+      }
+    },
+    {
+      "content": {
+        "timestamp": "2026-10-18T14:07:00Z",
+        "app_name": "zoom.us",
+        "window_name": "Zoom Meeting",
+        "text": ""
+      }
+    }
+  ],
+  "audio": [
+    {
+      "content": {
+        "timestamp": "2026-10-18T14:02:15Z",
+        "transcription": "Bonjour à tous je vais vous présenter notre projet"
+      }
+    },
+    {
+      "content": {
+        "timestamp": "2026-10-18T14:02:20Z",
+        "transcription": "qui s'appelle Pitch-Me et qui permet de"
+      }
+    },
+    {
+      "content": {
+        "timestamp": "2026-10-18T14:02:25Z",
+        "transcription": "s'entraîner à pitcher devant un public"
+      }
+    },
+    {
+      "content": {
+        "timestamp": "2026-10-18T14:02:35Z",
+        "transcription": "Voici le problème que nous résolvons"
+      }
+    },
+    {
+      "content": {
+        "timestamp": "2026-10-18T14:04:00Z",
+        "transcription": "Et maintenant notre solution"
+      }
+    },
+    {
+      "content": {
+        "timestamp": "2026-10-18T14:05:05Z",
+        "transcription": "Merci pour votre attention"
+      }
+    },
+    {
+      "content": {
+        "timestamp": "2026-10-18T14:05:10Z",
+        "transcription": "Des questions"
+      }
+    },
+    {
+      "content": {
+        "timestamp": "2026-10-18T14:07:00Z",
+        "transcription": "Merci au revoir"
+      }
+    }
+  ]
+}

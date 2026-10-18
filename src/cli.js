@@ -19,6 +19,9 @@ import {
   supprimerPid,
   processusEnVie
 } from './screenpipe-process.js';
+import { recupererDonneesSession } from './screenpipe.js';
+import { calculerTimeline } from './timeline.js';
+import { writeFile } from 'node:fs/promises';
 
 const COMMANDES = ['new', 'start', 'ready', 'mark', 'stop', 'report', 'serve', 'next'];
 
@@ -254,6 +257,62 @@ async function commandeStop(args) {
 }
 
 /**
+ * Commande: report <id>
+ */
+async function commandeReport(args) {
+  validerConfig(false, true);
+
+  if (args.length === 0) {
+    console.error('Erreur: ID de session manquant');
+    console.log('Usage: report <id>');
+    process.exit(1);
+  }
+
+  const id = args[0];
+  const sessionDir = join(CONFIG.SESSIONS_DIR, id);
+  const manifest = await lireManifeste(sessionDir);
+
+  if (manifest.statut !== 'termine') {
+    console.error('Erreur: la session doit être terminée avant de générer le rapport');
+    console.log('Utilisez "stop" pour terminer la session');
+    process.exit(1);
+  }
+
+  console.log(`\n📊 Calcul de la timeline pour ${id}...`);
+
+  // Récupérer les données depuis l'API Screenpipe
+  // Note: l'instance dédiée doit toujours tourner pour accéder aux données
+  const donnees = await recupererDonneesSession(
+    manifest.debut,
+    manifest.fin,
+    CONFIG.SCREENPIPE_PORT,
+    CONFIG.SCREENPIPE_API_KEY
+  );
+
+  console.log(`   - Frames récupérées: ${donnees.frames.length}`);
+  console.log(`   - Audio récupérés: ${donnees.audio.length}`);
+
+  // Calculer la timeline
+  const timeline = calculerTimeline(manifest, donnees);
+
+  // Écrire timeline.json
+  const timelinePath = join(sessionDir, 'timeline.json');
+  await writeFile(timelinePath, JSON.stringify(timeline, null, 2), 'utf-8');
+
+  console.log(`✅ Timeline calculée et sauvegardée`);
+  console.log(`   - Durée totale: ${timeline.duree_s}s`);
+  console.log(`   - Durée live: ${timeline.duree_live_s}s`);
+  console.log(`   - Changements de fenêtre: ${timeline.changements_fenetre}`);
+  console.log(`   - Fenêtres hors cadre: ${timeline.hors_cadre.length}`);
+
+  // Mettre à jour le statut
+  manifest.statut = 'analyse';
+  await ecrireManifeste(sessionDir, manifest);
+
+  console.log(`\n⏭️  Prochaine étape: générer le rapport LLM (TODO)`);
+}
+
+/**
  * Point d'entrée
  */
 async function main() {
@@ -291,6 +350,8 @@ async function main() {
         await commandeStop(commandeArgs);
         break;
       case 'report':
+        await commandeReport(commandeArgs);
+        break;
       case 'serve':
       case 'next':
         console.log(`⚠️  Commande "${commande}" pas encore implémentée`);

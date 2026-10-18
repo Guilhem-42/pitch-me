@@ -1,0 +1,21 @@
+{
+  "id": "2026-10-18-s02",
+  "titre": "Session sans audio",
+  "objectif": "Tester sans audio",
+  "criteres": [],
+  "duree_cible_s": 180,
+  "fenetres_prevues": [
+    {
+      "app": "Google Chrome",
+      "motif": "navigateur"
+    }
+  ],
+  "audio": false,
+  "session_precedente": null,
+  "checklist": [],
+  "reperes": [],
+  "debut": "2026-10-18T15:00:00Z",
+  "pret": "2026-10-18T15:01:00Z",
+  "fin": "2026-10-18T15:03:00Z",
+  "statut": "termine"
+}

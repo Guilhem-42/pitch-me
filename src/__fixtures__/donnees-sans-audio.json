@@ -1,0 +1,29 @@
+{
+  "frames": [
+    {
+      "content": {
+        "timestamp": "2026-10-18T15:00:00Z",
+        "app_name": "Finder",
+        "window_name": "Documents",
+        "text": ""
+      }
+    },
+    {
+      "content": {
+        "timestamp": "2026-10-18T15:01:00Z",
+        "app_name": "Google Chrome",
+        "window_name": "Google",
+        "text": "Search results"
+      }
+    },
+    {
+      "content": {
+        "timestamp": "2026-10-18T15:02:00Z",
+        "app_name": "Google Chrome",
+        "window_name": "Documentation",
+        "text": "API Reference"
+      }
+    }
+  ],
+  "audio": []
+}
