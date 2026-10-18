@@ -41,3 +41,6 @@ sessions/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+
+# Sorties des scripts d'essai (données fictives générées)
+src/__fixtures__/test-output/
