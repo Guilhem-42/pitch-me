@@ -111,7 +111,7 @@ contraire. Les dates sont en ISO 8601 UTC.
   ],
   "temps_par_app": [{ "app": "Google Chrome", "duree_s": 280, "part": 0.61 }],
   "changements_fenetre": 14,
-  "hors_cadre": [{ "app": "Slack", "fenetre": "general", "duree_s": 12 }],
+  "hors_cadre": [{ "app": "Slack", "fenetre": "general", "debut_s": 140, "fin_s": 152, "duree_s": 12 }],
   "silences": [{ "debut_s": 201, "fin_s": 205, "duree_s": 4 }],
   "parole": { "duree_s": 290, "mots": 640, "mots_par_min": 132 },
   "reperes": [{ "t_s": 140, "type": "blocage", "texte": "" }],
@@ -157,7 +157,9 @@ contraire. Les dates sont en ISO 8601 UTC.
 - `verdict` : `oui`, `partiel`, `non`.
 - `gravite` : `info`, `attention`, `bloquant`. `priorite` : 1 (haute) à 3.
 - `preuve.source` : un champ de `timeline.json` ; `t_s` renvoie à une entrée qui
-  existe. Le code **rejette** un rapport dont une preuve ne correspond à rien.
+  existe : égal au `t_s` d'un repère ou d'un extrait, ou compris dans
+  l'intervalle `debut_s` à `fin_s` d'une fenêtre, d'un silence ou d'une sortie
+  hors cadre. Le code **rejette** un rapport dont une preuve ne correspond à rien.
 - `comparaison` : `null` pour la première session. Les valeurs `avant` et
   `apres` sont lues dans les deux `timeline.json`, jamais écrites par le LLM.
 - `todo_detectes` : incohérences ou tâches repérées dans le texte à l'écran
