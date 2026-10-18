@@ -12,12 +12,12 @@ Le wrapper est entièrement implémenté (étapes 1 à 5) mais ne peut pas être
 
 ## Test avec fixtures
 
-Un script `src/test-report.js` permet de tester la génération de rapport avec des données fictives sans lancer Screenpipe.
+Un script `src/essai-rapport.js` permet de tester la génération de rapport avec des données fictives sans lancer Screenpipe.
 
 **Prérequis :** fichier `.env` configuré avec les clés API.
 
 ```bash
-node src/test-report.js
+node src/essai-rapport.js
 ```
 
 Ce script :
