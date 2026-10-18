@@ -97,23 +97,25 @@ export async function lirePid(sessionDir) {
 }
 
 /**
- * Vérifie si un processus tourne
- * @param {number} pid - PID du processus
- * @returns {boolean} true si le processus tourne
+ * Vérifie si le groupe de processus lancé par le wrapper tourne encore.
+ * Le processus est lancé détaché : son PID est celui du chef de groupe, et
+ * `npx` a des enfants (le vrai Screenpipe) qu'un signal sur le seul PID
+ * laisserait en vie.
+ * @param {number} pid - PID du chef de groupe
+ * @returns {boolean} true si au moins un processus du groupe tourne
  */
 export function processusEnVie(pid) {
   try {
-    // process.kill avec signal 0 ne tue pas, juste teste l'existence
-    process.kill(pid, 0);
+    process.kill(-pid, 0);
     return true;
-  } catch {
-    return false;
+  } catch (err) {
+    return err.code === 'EPERM';
   }
 }
 
 /**
- * Arrête proprement un processus Screenpipe
- * @param {number} pid - PID du processus
+ * Arrête proprement tout le groupe de processus Screenpipe
+ * @param {number} pid - PID du chef de groupe
  */
 export async function arreterScreenpipe(pid) {
   if (!processusEnVie(pid)) {
@@ -121,8 +123,8 @@ export async function arreterScreenpipe(pid) {
   }
 
   try {
-    // SIGTERM pour arrêt propre
-    process.kill(pid, 'SIGTERM');
+    // SIGTERM sur le groupe pour un arrêt propre
+    process.kill(-pid, 'SIGTERM');
 
     // Attendre jusqu'à 10 secondes
     for (let i = 0; i < 20; i++) {
@@ -132,12 +134,10 @@ export async function arreterScreenpipe(pid) {
       }
     }
 
-    // Si toujours en vie, SIGKILL
-    if (processusEnVie(pid)) {
-      process.kill(pid, 'SIGKILL');
-    }
+    // Si le groupe est toujours en vie, SIGKILL
+    process.kill(-pid, 'SIGKILL');
   } catch (err) {
-    // Le processus est peut-être déjà mort
+    // Le groupe est peut-être déjà mort
     if (err.code !== 'ESRCH') {
       throw err;
     }
