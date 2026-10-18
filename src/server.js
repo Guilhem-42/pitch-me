@@ -128,8 +128,8 @@ export function demarrerServeur(port, webDir, sessionsDir) {
         return;
       }
 
-      if (path.startsWith('/api/session/')) {
-        // Détails d'une session
+      if (path.startsWith('/api/session/') && req.method === 'GET') {
+        // Détails d'une session (lecture seule : les routes POST sous /api/session/:id/… sont plus bas)
         const id = path.replace('/api/session/', '');
         if (!/^[A-Za-z0-9_-]+$/.test(id)) {
           res.writeHead(400);

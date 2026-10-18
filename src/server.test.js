@@ -1,6 +1,6 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, rm, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { demarrerServeur } from './server.js';
@@ -114,4 +114,27 @@ test('POST /api/start refuse sans consentement dans le corps', async () => {
   assert.equal(reponse.status, 400);
   const data = await reponse.json();
   assert.ok(data.error);
+});
+
+test('POST /api/session/:id/dupliquer crée une copie vide en préparation', async () => {
+  const { id } = await creerSession('Source');
+  const rep = await fetch(`http://127.0.0.1:${port}/api/session/${id}/dupliquer`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jeton}` }
+  });
+  assert.equal(rep.status, 200);
+  const copie = await rep.json();
+  assert.match(copie.titre, /\(copie\)$/);
+  assert.equal(copie.statut, 'preparation');
+  assert.notEqual(copie.id, id);
+  assert.deepEqual(await readdir(join(CONFIG.SESSIONS_DIR, copie.id, 'screenpipe')), []);
+});
+
+test('POST /api/session/:id/dupliquer refuse sans jeton', async () => {
+  const { id } = await creerSession('Source 2');
+  const rep = await fetch(`http://127.0.0.1:${port}/api/session/${id}/dupliquer`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  assert.equal(rep.status, 401);
 });
