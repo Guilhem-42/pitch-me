@@ -28,8 +28,8 @@ répétition de notre propre pitch, en plusieurs itérations.
 | | |
 |---|---|
 | **Deck** | [`presentation/Pitch-Me-UP_slides_v1_18-10-2026.pdf`](presentation/Pitch-Me-UP_slides_v1_18-10-2026.pdf) (6 pages) |
-| **Vidéo de démo** | `Pitch-Me-UP_presentation-video_v1_18-10-2026.mp4` (27 Mo, non versionnée) ; lien en ligne à ajouter |
-| **Soumission** | lien à ajouter |
+| **Vidéo de démo** | [Google Drive](https://drive.google.com/file/d/1oWmMDqGvfqNii2_922y3M91gI6Sko4lK/view?usp=sharing) |
+| **Soumission** | page fermée, plus accessible |
 
 ## Équipe
 
