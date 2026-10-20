@@ -18,7 +18,8 @@ répétition de notre propre pitch, en plusieurs itérations.
 | `src/`           | Wrapper : pilotage de Screenpipe, extraction, rapport        |
 | `web/`           | Mini dashboard du bilan                                      |
 | `prompts/`       | Manifeste de session et prompts du bilan                     |
-| `docs/`          | Architecture (`ARCHI_*`), décisions, `pitch.pdf` (deck final) |
+| `docs/`          | Architecture (`ARCHI_*`), décisions (`DECISIONS.md`)         |
+| `presentation/`  | Deck de présentation (PDF)                                   |
 | `preparation/`   | Notes de préparation, **non versionné** (dossier voisin `../preparation/`) |
 | `sessions/`      | Données de capture, **jamais versionnées**                   |
 
@@ -26,9 +27,9 @@ répétition de notre propre pitch, en plusieurs itérations.
 
 | | |
 |---|---|
-| **Deck** | à compléter (`docs/pitch.pdf`) |
-| **Vidéo de démo** | à compléter |
-| **Soumission** | à compléter |
+| **Deck** | [`presentation/Pitch-Me-UP_slides_v1_18-10-2026.pdf`](presentation/Pitch-Me-UP_slides_v1_18-10-2026.pdf) (6 pages) |
+| **Vidéo de démo** | `Pitch-Me-UP_presentation-video_v1_18-10-2026.mp4` (27 Mo, non versionnée) ; lien en ligne à ajouter |
+| **Soumission** | lien à ajouter |
 
 ## Équipe
 
