@@ -17,7 +17,5 @@ Une ligne par dépôt, URL complète en première colonne (c'est ce que lit `fet
 
 | Dépôt | Équipe / auteur | Pourquoi on le garde | Licence | Réutilisable ? | SHA épinglé |
 |---|---|---|---|---|---|
-| https://github.com/&lt;owner&gt;/&lt;repo&gt; | `<équipe>` | `<idée, technique, outil>` | `<licence ou aucune>` | `oui / non / avec attribution` | `<7 à 40 car., facultatif>` |
-
-> Ligne d'exemple (ignorée par `fetch.sh`, car l'URL ne commence pas par `https://github.com/<owner>`
-> valide) : remplacer par les vrais dépôts.
+| https://github.com/Yihuan0301/screenpipe_hackathon | Yihuan0301 | FounderHUD : tableau de bord qui rassemble revenus, coûts, santé de l'infra et retours utilisateurs via Screenpipe + Playwright | aucune | non | |
+| https://github.com/R0-main/hackathon-screen-pipe-october-2026 | R0-main | Couche de connaissance d'équipe : contexte de travail distillé depuis le Screenpipe de chaque membre, interrogeable par des agents, accès par zones | aucune | non | |
