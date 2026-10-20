@@ -18,10 +18,17 @@ répétition de notre propre pitch, en plusieurs itérations.
 | `src/`           | Wrapper : pilotage de Screenpipe, extraction, rapport        |
 | `web/`           | Mini dashboard du bilan                                      |
 | `prompts/`       | Manifeste de session et prompts du bilan                     |
-| `pitch/`         | Pitch deck (versions v1, v2, v3 exportées)                   |
-| `docs/`          | Architecture (`ARCHI_*`), décisions (`DECISIONS.md`)         |
-| `preparation/`   | Notes de préparation, **non versionné** (voir `.gitignore`)  |
+| `docs/`          | Architecture (`ARCHI_*`), décisions, `pitch.pdf` (deck final) |
+| `preparation/`   | Notes de préparation, **non versionné** (dossier voisin `../preparation/`) |
 | `sessions/`      | Données de capture, **jamais versionnées**                   |
+
+## Liens
+
+| | |
+|---|---|
+| **Deck** | à compléter (`docs/pitch.pdf`) |
+| **Vidéo de démo** | à compléter |
+| **Soumission** | à compléter |
 
 ## Équipe
 
