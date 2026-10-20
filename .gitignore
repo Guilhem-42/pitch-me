@@ -44,3 +44,6 @@ sessions/
 
 # Sorties des scripts d'essai (données fictives générées)
 src/__fixtures__/test-output/
+
+# Dépôts d'autres participants clonés à la demande (references/fetch.sh)
+references/_clones/
