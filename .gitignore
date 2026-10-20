@@ -36,7 +36,8 @@ preparation/
 
 # --- Données de capture Screenpipe : captures d'écran, audio, bases ---
 # Elles contiennent ce qui s'est affiché et dit à l'écran : jamais versionnées.
-sessions/
+sessions/*
+!sessions/.gitkeep
 .screenpipe/
 *.sqlite
 *.sqlite-shm
@@ -44,6 +45,3 @@ sessions/
 
 # Sorties des scripts d'essai (données fictives générées)
 src/__fixtures__/test-output/
-
-# Dépôts d'autres participants clonés à la demande (references/fetch.sh)
-references/_clones/
